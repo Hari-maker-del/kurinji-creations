@@ -1,0 +1,49 @@
+"use client";
+import {useMemo,useState} from "react";
+import Link from "next/link";
+import {useParams} from "next/navigation";
+import {ArrowLeft,ArrowRight,Heart,Minus,Plus,MessageCircle,ShieldCheck,PackageCheck,Truck} from "lucide-react";
+
+const catalogue=[
+{id:"1",name:"Golden Hour Hoops",category:"Earrings",price:399,tag:"Bestseller",images:["https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1200&q=90","https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1200&q=90"],description:"A warm golden accent for everyday moments. These hoops bring a little glow to your everyday edit and pair beautifully with both relaxed and dressed-up looks.",material:"Imitation jewellery · finish details to be confirmed",care:"Keep away from water, perfume and harsh chemicals. Store in a dry pouch."},
+{id:"2",name:"Pearl Drop Elegance",category:"Earrings",price:549,tag:"New",images:["https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1200&q=90","https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1200&q=90"],description:"Soft pearl-inspired details with a graceful finish. A lovely choice for celebrations, gifting and adding a delicate touch to everyday outfits.",material:"Imitation jewellery · finish details to be confirmed",care:"Wipe gently with a soft dry cloth after use."},
+{id:"3",name:"Everyday Charm Chain",category:"Necklaces",price:699,tag:"",images:["https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1200&q=90","https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1200&q=90"],description:"A delicate layer made for every day. Wear it solo for a minimal look or pair it with your favourite pieces.",material:"Imitation jewellery · chain length to be confirmed",care:"Store separately to help prevent scratches and tangles."},
+{id:"4",name:"Solstice Bracelet",category:"Bracelets",price:449,tag:"",images:["https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1200&q=90","https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1200&q=90"],description:"An understated finishing touch that slips easily into your everyday jewellery rotation.",material:"Imitation jewellery · sizing to be confirmed",care:"Avoid moisture and store in a dry jewellery pouch."}
+];
+const money=(v:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(v);
+export default function ProductPage(){
+ const params=useParams<{slug:string}>(),product=catalogue.find(p=>p.id===params.slug)??catalogue[0];
+ const [photo,setPhoto]=useState(0),[qty,setQty]=useState(1),[saved,setSaved]=useState(false);
+ const orderText=encodeURIComponent("Hello Kurinji Creations! I would like to enquire about "+product.name+" (Qty: "+qty+"). Please confirm availability and delivery details.");
+ const related=useMemo(()=>catalogue.filter(p=>p.id!==product.id).slice(0,3),[product.id]);
+ return <main className="detail-page">
+  <div className="promo">A LITTLE SOMETHING LOVELY · KURINJI CREATIONS</div>
+  <header className="container detail-header"><Link href="/" className="back-link"><ArrowLeft size={17}/> <span>BACK TO SHOP</span></Link><Link href="/" className="brand">KURINJI<small>CREATIONS</small></Link><span className="detail-header-note">THE LITTLE DETAILS</span></header>
+  <div className="container detail-layout">
+   <section className="detail-gallery">
+    <div className="detail-main-photo"><img src={product.images[photo]} alt={product.name+" jewellery view"}/><span className="detail-photo-tag">{product.tag||"CURATED FOR YOU"}</span></div>
+    <div className="detail-thumbs">{product.images.map((src,i)=><button key={src+i} className={photo===i?"selected":""} onClick={()=>setPhoto(i)} aria-label={"View product image "+(i+1)}><img src={src} alt=""/></button>)}</div>
+   </section>
+   <section className="detail-info">
+    <div className="kicker">{product.category} · KURINJI EDIT</div>
+    <h1>{product.name}</h1>
+    <div className="detail-price">{money(product.price)}</div>
+    <p className="detail-tax">Inclusive of listed price · Shipping confirmed on enquiry</p>
+    <div className="detail-rule"/>
+    <p className="detail-description">{product.description}</p>
+    <div className="detail-spec"><span>PRODUCT TYPE</span><strong>{product.category}</strong></div>
+    <div className="detail-spec"><span>MATERIAL</span><strong>{product.material}</strong></div>
+    <div className="detail-rule"/>
+    <div className="quantity-label">QUANTITY</div>
+    <div className="quantity-control"><button onClick={()=>setQty(q=>Math.max(1,q-1))} aria-label="Decrease quantity"><Minus size={15}/></button><span>{qty}</span><button onClick={()=>setQty(q=>Math.min(10,q+1))} aria-label="Increase quantity"><Plus size={15}/></button></div>
+    <div className="detail-actions"><a className="primary-button detail-order" href={"https://wa.me/?text="+orderText} target="_blank" rel="noreferrer">ENQUIRE / ORDER ON WHATSAPP <ArrowRight size={15}/></a><button className="detail-wish" onClick={()=>setSaved(!saved)} aria-label="Save product"><Heart size={19} fill={saved?"#8f5d58":"none"}/></button></div>
+    <div className="detail-assurances"><div><PackageCheck size={18}/><span>Gift-ready packaging<br/><small>Ask us about gifting</small></span></div><div><Truck size={18}/><span>Delivery details<br/><small>Confirmed before ordering</small></span></div><div><ShieldCheck size={18}/><span>Personal support<br/><small>We're happy to help</small></span></div></div>
+    <details className="detail-accordion"><summary>Care instructions</summary><p>{product.care}</p></details>
+    <details className="detail-accordion"><summary>Need help choosing?</summary><p>Message us on WhatsApp and we'll help with product details, availability and gifting questions.</p></details>
+   </section>
+  </div>
+  <section className="container related-section"><div className="kicker">MORE TO LOVE</div><h2 className="section-title">You may also like</h2><div className="related-grid">{related.map(p=><Link href={"/products/"+p.id} key={p.id} className="related-card"><img src={p.images[0]} alt={p.name}/><span>{p.name}</span><strong>{money(p.price)}</strong></Link>)}</div></section>
+  <footer className="container footer detail-footer"><div style={{textAlign:"center"}}><div className="brand">KURINJI<small>CREATIONS</small></div><p className="detail-footer-note">ELEGANCE IN EVERY DETAIL</p><Link href="/" className="text-link">CONTINUE SHOPPING</Link></div></footer>
+  <a href={"https://wa.me/?text="+encodeURIComponent("Hello Kurinji Creations! I have a question about your jewellery.")} target="_blank" rel="noreferrer" className="detail-whatsapp" aria-label="Chat on WhatsApp"><MessageCircle size={21}/></a>
+ </main>;
+}
