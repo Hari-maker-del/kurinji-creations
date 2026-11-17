@@ -16,6 +16,8 @@ export default function CheckoutPage(){
  const [name,setName]=useState(""),[phone,setPhone]=useState(""),[email,setEmail]=useState(""),[address,setAddress]=useState(""),[note,setNote]=useState("");
  const total=useMemo(()=>products.reduce((s,p)=>s+p.price*(quantities[p.id]||0),0),[products,quantities]);
  useEffect(()=>{
+  const savedNote=localStorage.getItem("kurinji_checkout_note_v1");
+  if(savedNote)setNote(savedNote);
   let ids:string[]=[];
   try{const parsed=JSON.parse(localStorage.getItem(KEY)||"[]");if(Array.isArray(parsed))ids=parsed.filter((x):x is string=>typeof x==="string");}catch{}
   const counts:Record<string,number>={};ids.forEach(id=>counts[id]=(counts[id]||0)+1);
@@ -47,7 +49,7 @@ export default function CheckoutPage(){
    const checkout=new window.Razorpay({key:order.keyId,amount:order.amount,currency:order.currency,name:"Kurinji Creations",description:"Your jewellery order",order_id:order.razorpayOrderId,prefill:{name,contact:phone,email},theme:{color:"#a8794f"},handler:async(payment:any)=>{
     const verify=await fetch("/api/payments/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:order.orderId,razorpayOrderId:payment.razorpay_order_id,razorpayPaymentId:payment.razorpay_payment_id,razorpaySignature:payment.razorpay_signature})});
     const result=await verify.json();if(!verify.ok){setMessage(result.error||"Payment confirmation is pending. Contact the store with your order number.");setBusy(false);return;}
-    localStorage.removeItem(KEY);router.push("/order-success?order="+encodeURIComponent(result.orderNumber));
+    localStorage.removeItem(KEY);localStorage.removeItem("kurinji_checkout_note_v1");router.push("/order-success?order="+encodeURIComponent(result.orderNumber));
    },modal:{ondismiss:()=>setBusy(false)}});
    setBusy(false);checkout.open();
   }catch(e){setMessage(e instanceof Error?e.message:"Checkout failed.");setBusy(false);}
