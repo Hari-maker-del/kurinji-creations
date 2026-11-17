@@ -152,3 +152,51 @@ using (
 );
 
 -- No demo products are inserted: only the owner's real catalogue should be published.
+
+
+-- Performance and policy refinement applied after initial schema creation.
+create index if not exists products_category_id_idx on public.products(category_id);
+drop policy if exists "Anyone can view active categories" on public.product_categories;
+drop policy if exists "Store admins manage categories" on public.product_categories;
+create policy "View active categories or admin" on public.product_categories for select to anon, authenticated
+using (is_active = true or ((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+create policy "Admins insert categories" on public.product_categories for insert to authenticated
+with check (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+create policy "Admins update categories" on public.product_categories for update to authenticated
+using (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin')
+with check (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+create policy "Admins delete categories" on public.product_categories for delete to authenticated
+using (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+drop policy if exists "Anyone can view active products" on public.products;
+drop policy if exists "Store admins manage products" on public.products;
+create policy "View active products or admin" on public.products for select to anon, authenticated
+using (is_active = true or ((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+create policy "Admins insert products" on public.products for insert to authenticated
+with check (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+create policy "Admins update products" on public.products for update to authenticated
+using (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin')
+with check (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+create policy "Admins delete products" on public.products for delete to authenticated
+using (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+drop policy if exists "Anyone can view images for active products" on public.product_images;
+drop policy if exists "Store admins manage product images" on public.product_images;
+create policy "View active product images or admin" on public.product_images for select to anon, authenticated
+using (exists (select 1 from public.products p where p.id = product_id and p.is_active = true)
+  or ((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+create policy "Admins insert product images" on public.product_images for insert to authenticated
+with check (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+create policy "Admins update product images" on public.product_images for update to authenticated
+using (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin')
+with check (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+create policy "Admins delete product images" on public.product_images for delete to authenticated
+using (((select auth.jwt()) -> 'app_metadata' ->> 'store_role') = 'admin');
+drop policy if exists "Store admins upload product photos" on storage.objects;
+create policy "Store admins upload product photos" on storage.objects for insert to authenticated
+with check (bucket_id='product-images' and ((select auth.jwt()) -> 'app_metadata' ->> 'store_role')='admin');
+drop policy if exists "Store admins update product photos" on storage.objects;
+create policy "Store admins update product photos" on storage.objects for update to authenticated
+using (bucket_id='product-images' and ((select auth.jwt()) -> 'app_metadata' ->> 'store_role')='admin')
+with check (bucket_id='product-images' and ((select auth.jwt()) -> 'app_metadata' ->> 'store_role')='admin');
+drop policy if exists "Store admins delete product photos" on storage.objects;
+create policy "Store admins delete product photos" on storage.objects for delete to authenticated
+using (bucket_id='product-images' and ((select auth.jwt()) -> 'app_metadata' ->> 'store_role')='admin');
