@@ -15,19 +15,21 @@ export default function LandingPage() {
       <nav><a href="#collections">Collections</a><a href="#story">Our story</a><a href="#custom">Custom pieces</a></nav>
       <Link href="/shop" className="kc-header-cta">Explore the shop <ArrowRight size={15}/></Link>
     </header>
-    <section className="kc-hero">
-      <div className="kc-hero-copy">
-        <div className="kc-eyebrow"><span/> THE KURINJI EDIT</div>
+    <section className="kc-hero kc-cinematic">
+      <div className="kc-cinematic-slides" aria-hidden="true">
+        <img className="kc-slide kc-slide-one" src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=2200&q=90" alt=""/>
+        <img className="kc-slide kc-slide-two" src="https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=2200&q=90" alt=""/>
+        <img className="kc-slide kc-slide-three" src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=2200&q=90" alt=""/>
+      </div>
+      <div className="kc-cinematic-content">
+        <div className="kc-eyebrow"><span/> THE KURINJI EDIT · EST. 2026</div>
         <h1>Jewellery that<br/><em>feels like you.</em></h1>
         <p>Thoughtful little details. Soft, expressive colours. Pieces chosen to make your everyday moments feel a little more special.</p>
         <div className="kc-hero-actions"><Link href="/shop" className="kc-button">Discover the collection <ArrowRight size={16}/></Link><a href="#story" className="kc-text-link">A little about us</a></div>
-        <div className="kc-hero-foot"><span>01 — PERSONAL STYLE</span><span>MADE TO BE YOURS</span></div>
+        <div className="kc-cinematic-caption"><span>01 / 03</span><i/><span>THE ART OF EVERYDAY ELEGANCE</span></div>
       </div>
-      <div className="kc-hero-art">
-        <img className="kc-hero-main" src="https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1400&q=90" alt="Elegant gold jewellery in warm natural light"/>
-        <div className="kc-image-note"><span>THE BEAUTY OF</span><strong>little things</strong><Flower2 size={23}/></div>
-        <div className="kc-vertical-note">KURINJI CREATIONS · EST. 2026</div>
-      </div>
+      <div className="kc-cinematic-side">KURINJI CREATIONS <span>✦</span> LITTLE DETAILS. LASTING CHARM.</div>
+      <a href="#story" className="kc-scroll-cue"><span/> SCROLL TO DISCOVER</a>
     </section>
     <section className="kc-intro" id="story"><div className="kc-intro-mark">K.</div><div><div className="kc-eyebrow">A NOTE FROM KURINJI</div><h2>Not just an accessory.<br/><em>A little piece of you.</em></h2></div><p>We believe the smallest details can hold the loveliest stories. Discover jewellery for everyday moments, thoughtful gifting and the colours that feel most like you.</p></section>
     <section className="kc-collections" id="collections"><div className="kc-section-head"><div><div className="kc-eyebrow">FIND YOUR KIND OF LOVELY</div><h2>Explore the collections</h2></div><Link href="/shop" className="kc-text-link">VIEW ALL PIECES <ArrowRight size={14}/></Link></div><div className="kc-collection-grid">{collections.map((item,i)=><Link href="/shop" className="kc-collection-card" key={item.name}><div className="kc-collection-image"><img src={item.image} alt={item.name}/><span>0{i+1}</span></div><div className="kc-collection-meta"><div><h3>{item.name}</h3><p>{item.note}</p></div><ArrowRight size={18}/></div></Link>)}</div></section>
