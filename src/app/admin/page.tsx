@@ -7,6 +7,7 @@ import { ArrowLeft, BadgeCheck, Box, Camera, Check, ChevronDown, CirclePlus, Cli
 import "./admin.css";
 
 type Category = { id: string; name: string; slug: string; is_active: boolean };
+type StoreOrder = { id:string; order_number:number; customer_name:string; phone:string; email:string|null; address:string|null; customer_note:string|null; items:any[]; subtotal_paise:number; status:"new"|"confirmed"|"processing"|"shipped"|"delivered"|"cancelled"; payment_status:string; admin_note:string|null; created_at:string };
 type Product = {
   id: string; name: string; slug: string; category_id: string | null; short_description: string | null;
   description: string | null; price_paise: number; compare_at_price_paise: number | null; sku: string | null;
@@ -33,9 +34,9 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState("");
   const [busy, setBusy] = useState(false);
   const [authorized, setAuthorized] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);\n  const [orders, setOrders] = useState<StoreOrder[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tab, setTab] = useState<"overview" | "products" | "categories">("overview");
+  const [tab, setTab] = useState<"overview" | "products" | "categories" | "orders">("overview");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState<string | null>(null);
@@ -45,12 +46,12 @@ export default function AdminPage() {
   const [categoryName, setCategoryName] = useState("");
 
   const loadData = useCallback(async () => {
-    const [{ data: categoryRows }, { data: productRows }] = await Promise.all([
+    const [{ data: categoryRows }, { data: productRows }, { data: orderRows }] = await Promise.all([
       supabase.from("product_categories").select("id,name,slug,is_active").order("sort_order"),
       supabase.from("products").select("*,product_categories(name),product_images(id,image_url,is_primary,sort_order)").order("created_at", { ascending: false })
     ]);
     setCategories((categoryRows ?? []) as Category[]);
-    setProducts((productRows ?? []) as Product[]);
+    setProducts((productRows ?? []) as Product[]);\n    setOrders((orderRows ?? []) as StoreOrder[]);
   }, [supabase]);
 
   const verifySession = useCallback(async () => {
@@ -156,7 +157,7 @@ export default function AdminPage() {
     if (error) setNotice(error.message); else { setNotice("Product deleted."); await loadData(); }
   }
 
-  async function addCategory(event: FormEvent) {
+  async function updateOrderStatus(order: StoreOrder, status: StoreOrder["status"]) {\n    const { error } = await supabase.from("store_orders").update({ status }).eq("id", order.id);\n    if (error) setNotice(error.message); else { setNotice(`Order #${order.order_number} updated.`); await loadData(); }\n  }\n\n  async function addCategory(event: FormEvent) {
     event.preventDefault();
     const name = categoryName.trim(); if (!name) return;
     const { error } = await supabase.from("product_categories").insert({ name, slug: slugify(name), sort_order: categories.length + 1, is_active: true });
@@ -186,7 +187,7 @@ export default function AdminPage() {
     <aside className="admin-sidebar"><a href="/" className="admin-side-brand">KURINJI<small>CREATIONS · STUDIO</small></a><div className="admin-side-label">WORKSPACE</div>
       <button className={tab==="overview"?"selected":""} onClick={()=>setTab("overview")}><LayoutDashboard size={17}/> Overview</button>
       <button className={tab==="products"?"selected":""} onClick={()=>setTab("products")}><ShoppingBag size={17}/> Products <span>{products.length}</span></button>
-      <button className={tab==="categories"?"selected":""} onClick={()=>setTab("categories")}><ClipboardList size={17}/> Categories</button>
+      <button className={tab==="categories"?"selected":""} onClick={()=>setTab("categories")}><ClipboardList size={17}/> Categories</button>\n      <button className={tab==="orders"?"selected":""} onClick={()=>setTab("orders")}><Package size={17}/> Orders <span>{orders.filter(o=>o.status==="new").length}</span></button>
       <div className="admin-side-bottom"><div className="admin-user"><div className="admin-avatar">{userEmail.slice(0,1).toUpperCase()}</div><div><strong>Store owner</strong><small>{userEmail}</small></div></div><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </aside>
     <section className="admin-main">
@@ -194,7 +195,7 @@ export default function AdminPage() {
       <div className="admin-content">
         {notice&&<div className="admin-notice"><Check size={16}/>{notice}<button onClick={()=>setNotice("")}><X size={15}/></button></div>}
         {tab==="overview"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">YOUR STORE AT A GLANCE</div><h1>Good day, Kurinji.</h1><p>Here’s what’s happening with your collection.</p></div><button className="admin-primary compact" onClick={newProduct}><Plus size={16}/> Add a product</button></div>
-          <div className="admin-stat-grid"><article><span><Package size={17}/> TOTAL PRODUCTS</span><strong>{products.length}</strong><small>Pieces in your catalogue</small></article><article><span><BadgeCheck size={17}/> PUBLISHED</span><strong>{activeCount}</strong><small>Visible on your storefront</small></article><article><span><Box size={17}/> LOW STOCK</span><strong>{lowStock}</strong><small>5 or fewer pieces remaining</small></article><article><span><Sparkles size={17}/> CATEGORIES</span><strong>{categories.length}</strong><small>Ways to explore your edit</small></article></div>
+          <div className="admin-stat-grid"><article><span><Package size={17}/> NEW ORDERS</span><strong>{orders.filter(o=>o.status==="new").length}</strong><small>Awaiting your review</small></article><article><span><ShoppingBag size={17}/> TOTAL ORDERS</span><strong>{orders.length}</strong><small>Customer enquiries received</small></article><article><span><Package size={17}/> TOTAL PRODUCTS</span><strong>{products.length}</strong><small>Pieces in your catalogue</small></article><article><span><BadgeCheck size={17}/> PUBLISHED</span><strong>{activeCount}</strong><small>Visible on your storefront</small></article><article><span><Box size={17}/> LOW STOCK</span><strong>{lowStock}</strong><small>5 or fewer pieces remaining</small></article><article><span><Sparkles size={17}/> CATEGORIES</span><strong>{categories.length}</strong><small>Ways to explore your edit</small></article></div>
           <div className="admin-panel"><div className="admin-panel-head"><div><div className="admin-eyebrow">LATEST ADDITIONS</div><h2>Your collection</h2></div><button className="admin-text-button" onClick={()=>setTab("products")}>Manage products <ArrowLeft className="admin-arrow-flip" size={14}/></button></div>
           {products.length===0?<div className="admin-empty"><div className="admin-empty-icon"><ImagePlus size={24}/></div><h3>Your first piece starts here.</h3><p>Add your real jewellery photos, price and details. Products stay hidden until you choose to publish them.</p><button className="admin-primary compact" onClick={newProduct}><Plus size={16}/> Add your first product</button></div>:<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>PRODUCT</th><th>PRICE</th><th>STOCK</th><th>STATUS</th><th/></tr></thead><tbody>{products.slice(0,6).map(p=><tr key={p.id}><td><div className="admin-product-cell"><img src={p.product_images?.find(i=>i.is_primary)?.image_url||p.product_images?.[0]?.image_url||"/placeholder.txt"} alt=""/><div><strong>{p.name}</strong><small>{p.sku||"No SKU"}</small></div></div></td><td>{money(p.price_paise)}</td><td>{p.stock_quantity}</td><td><span className={p.is_active?"admin-status live":"admin-status draft"}>{p.is_active?"Published":"Draft"}</span></td><td><button className="admin-icon-action" onClick={()=>editProduct(p)} aria-label="Edit product"><Pencil size={15}/></button></td></tr>)}</tbody></table></div>}</div>
         </>}
@@ -206,6 +207,9 @@ export default function AdminPage() {
             {form.customizable&&<label className="admin-custom-notes">Customisation details<textarea rows={3} value={form.customization_notes} onChange={e=>setForm({...form,customization_notes:e.target.value})} placeholder="Mention available colours, design choices and what needs confirmation."/></label>}
             <div className="admin-form-actions"><button type="button" className="admin-secondary" onClick={()=>{setEditing(null);setFormOpen(false);setForm(emptyForm);setImages([])}}>Cancel</button><button className="admin-primary" disabled={busy}>{busy?"Saving…":editing?"Save changes":"Create product"} <Check size={16}/></button></div>
           </form>:<div className="admin-panel"><div className="admin-panel-head"><div><div className="admin-eyebrow">ALL YOUR PIECES</div><h2>Product catalogue</h2></div><div className="admin-search"><Search size={15}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search products"/></div></div>{visibleProducts.length===0?<div className="admin-empty"><h3>No products yet</h3><p>Your real products will appear here after you add them.</p><button className="admin-primary compact" onClick={newProduct}><Plus size={16}/> Add product</button></div>:<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>PRODUCT</th><th>PRICE</th><th>STOCK</th><th>STATUS</th><th>ACTIONS</th></tr></thead><tbody>{visibleProducts.map(p=><tr key={p.id}><td><div className="admin-product-cell"><img src={p.product_images?.find(i=>i.is_primary)?.image_url||p.product_images?.[0]?.image_url||"/placeholder.txt"} alt=""/><div><strong>{p.name}</strong><small>{p.product_categories&&("name" in p.product_categories?p.product_categories.name:p.product_categories[0]?.name)||"Uncategorised"}</small></div></div></td><td>{money(p.price_paise)}</td><td>{p.stock_quantity}</td><td><button className={p.is_active?"admin-status live":"admin-status draft"} onClick={()=>togglePublish(p)}>{p.is_active?"Published":"Draft"}</button></td><td><div className="admin-row-actions"><button className="admin-icon-action" onClick={()=>editProduct(p)} aria-label="Edit"><Pencil size={15}/></button><button className="admin-icon-action danger" onClick={()=>deleteProduct(p)} aria-label="Delete"><Trash2 size={15}/></button></div></td></tr>)}</tbody></table></div>}</div>}
+        </>}
+        {tab==="orders"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">CUSTOMER MANAGEMENT</div><h1>Customer orders</h1><p>Review enquiries and keep each customer updated.</p></div><button className="admin-secondary" onClick={()=>void loadData()}>Refresh orders</button></div>
+          {orders.length===0?<div className="admin-panel admin-empty"><div className="admin-empty-icon"><Package size={24}/></div><h3>No customer orders yet.</h3><p>New orders submitted through the website will appear here.</p></div>:<div className="admin-order-list">{orders.map(order=><article className="admin-panel admin-order-card" key={order.id}><div className="admin-order-top"><div><div className="admin-eyebrow">ORDER #{order.order_number} · {new Date(order.created_at).toLocaleString("en-IN")}</div><h2>{order.customer_name}</h2><p>{order.phone}{order.email?" · "+order.email:""}</p></div><strong>{money(order.subtotal_paise)}</strong></div><div className="admin-order-items">{order.items.map((item:any,index:number)=><span key={index}>{item.name} × {item.quantity}</span>)}</div>{order.address&&<p className="admin-order-detail"><b>Address:</b> {order.address}</p>}{order.customer_note&&<p className="admin-order-detail"><b>Customer note:</b> {order.customer_note}</p>}<div className="admin-order-controls"><label>Order status<select value={order.status} onChange={e=>void updateOrderStatus(order,e.target.value as StoreOrder["status"])}><option value="new">New</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></label><span className="admin-status draft">Payment: {order.payment_status}</span></div></article>)}</div>}
         </>}
         {tab==="categories"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">SHOP ORGANISATION</div><h1>Categories</h1><p>Keep your collections beautifully organised.</p></div></div><div className="admin-panel"><div className="admin-panel-head"><div><div className="admin-eyebrow">COLLECTION TYPES</div><h2>Manage categories</h2></div></div><form className="admin-add-category" onSubmit={addCategory}><input value={categoryName} onChange={e=>setCategoryName(e.target.value)} placeholder="New category name" required/><button className="admin-primary compact"><Plus size={16}/> Add category</button></form><div className="admin-category-list">{categories.map(c=><div key={c.id}><div className="admin-category-icon"><ShoppingBag size={17}/></div><strong>{c.name}</strong><span className={c.is_active?"admin-status live":"admin-status draft"}>{c.is_active?"Visible":"Hidden"}</span><button className="admin-secondary small" onClick={()=>toggleCategory(c)}>{c.is_active?"Hide":"Show"}</button></div>)}</div></div></>}
       </div>
