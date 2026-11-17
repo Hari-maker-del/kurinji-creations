@@ -9,6 +9,7 @@ Add these to the Kurinji Creations project for the required environments:
 - `RAZORPAY_KEY_ID` — Razorpay Dashboard → Account & Settings → API Keys (start with Test Mode).
 - `RAZORPAY_KEY_SECRET` — matching secret. Server-only.
 - `SUPABASE_SERVICE_ROLE_KEY` — Supabase Project Settings → API Keys → service_role/secret key. Server-only.
+- `RAZORPAY_WEBHOOK_SECRET` — the webhook secret you choose in the Razorpay Dashboard.
 
 Do not prefix these with `NEXT_PUBLIC_`, commit their values, or share them in chat.
 
@@ -18,8 +19,10 @@ Do not prefix these with `NEXT_PUBLIC_`, commit their values, or share them in c
 2. Add the three variables above in Vercel and redeploy.
 3. Test successful, failed, cancelled and repeated payments.
 4. Confirm only captured payments are marked Paid in the owner dashboard.
-5. Add webhook reconciliation for `payment.captured`, `payment.failed` and `order.paid` before launch.
-6. Switch to Live Mode keys only after merchant KYC, settlement details, policies, shipping/returns and test cases are complete.
+5. Configure a Razorpay webhook URL: `https://kurinji-creations.vercel.app/api/payments/webhook`.
+6. Subscribe to `payment.captured` and `order.paid`, set the webhook secret in `RAZORPAY_WEBHOOK_SECRET`, and test delivery. The endpoint verifies the webhook signature and reconciles captured payments.
+7. Switch to Live Mode keys only after merchant KYC, settlement details, policies, shipping/returns and test cases are complete.
+
 
 ## Current status
 
