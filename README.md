@@ -29,14 +29,19 @@ Import this repository into Vercel. Framework preset: Next.js. Build command: `n
 
 ## Supabase setup (dedicated store project)
 
-The catalogue backend is prepared, but it is intentionally not connected to an existing Supabase project yet. The currently available project in the account contains unrelated application tables, so do not use it for this store.
+A dedicated Supabase project is now provisioned for this store in Singapore.
 
-1. Create a dedicated Supabase project for **KURINJI CREATIONS**.
-2. Open the project's SQL Editor and run `supabase/setup/catalogue.sql`.
-3. Copy `.env.example` to `.env.local` and fill in the project's API URL and **publishable** key.
-4. Add the same two variables in Vercel → Project → Settings → Environment Variables, then redeploy.
-5. In Supabase Auth, create the store owner account. Assign `store_role: admin` in that user's **app_metadata** (never user_metadata), then sign out and back in to refresh the JWT.
-6. Upload product photos to the `product-images` Storage bucket. Only authenticated store admins can upload, update, or delete files.
+- Project ref: `jubopzqecnbmjtfzngph`
+- API URL: `https://jubopzqecnbmjtfzngph.supabase.co`
+- Tables: `product_categories`, `products`, `product_images`
+- Storage bucket: `product-images`
+- Vercel production, preview and development environments have the public URL and publishable key configured.
+
+The schema is already applied. To reproduce it in another dedicated project, run `supabase/setup/catalogue.sql` in the Supabase SQL Editor.
+
+The storefront reads active products from Supabase and product detail pages look up products by slug. Until real products are entered and activated, the original sample catalogue remains as a clearly labelled preview.
+
+To grant store-owner access, create the owner's account in Supabase Auth and assign `store_role: admin` in trusted **app_metadata** (never user_metadata), then have the owner sign out and back in to refresh the JWT. Only store admins can write catalogue records or upload product images.
 
 The schema creates categories, products, and product images with Row Level Security. Public visitors can read active catalogue items; only a user whose trusted app metadata contains `store_role=admin` can manage catalogue records.
 
