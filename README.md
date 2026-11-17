@@ -2,7 +2,7 @@
 
 A mobile-first jewellery storefront built with Next.js, React, TypeScript and Tailwind CSS.
 
-## Getting started
+## Run locally
 
 ```bash
 npm install
@@ -11,29 +11,17 @@ npm run dev
 
 Open http://localhost:3000.
 
-## Current storefront
-
-- Responsive editorial-style homepage
+## Included in this starter
+- Responsive editorial-style storefront
 - Mobile bottom navigation and desktop navigation
-- Category discovery and product search
-- Sample product cards with wishlist interactions
-- Shopping bag drawer with remove and subtotal
+- Category browsing and client-side product search
+- Sample product cards and wishlist interactions
+- Shopping bag drawer with subtotal and remove actions
 - WhatsApp order handoff
-- Brand story, customer promise and contact section
+- Brand story, store promises and contact section
 
-## Important launch checklist
+## Before accepting real orders
+The products, prices, imagery and availability currently shown are sample content. Replace them with the actual business catalogue and verified product information. Configure the official WhatsApp Business number. Add accurate shipping, returns, privacy and terms policies. Connect a backend for inventory and order records, and implement payment verification server-side before enabling online checkout.
 
-The current catalogue and prices are sample content. Replace them with the store's actual products, verified prices, materials, stock and photos before accepting orders.
-
-Before public commerce launch:
-- Configure the official WhatsApp Business number in the contact links.
-- Add real product and policy content.
-- Connect Supabase for products, stock, customers and orders.
-- Integrate and verify Razorpay payment flow server-side.
-- Add shipping, returns, privacy and terms pages.
-- Configure analytics, SEO and a custom domain.
-- Test checkout, order notifications and mobile accessibility.
-
-## Deployment
-
-Connect this GitHub repository to Vercel. Framework preset: Next.js. Build command: `npm run build`.
+## Vercel
+Import this repository into Vercel. Framework preset: Next.js. Build command: `npm run build`.
