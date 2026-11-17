@@ -38,7 +38,8 @@ export default function AdminPage() {
   const [tab, setTab] = useState<"overview" | "products" | "categories">("overview");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
-  const [editing, setEditing] = useState<string | null>(null);\n  const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [notice, setNotice] = useState("");
   const [categoryName, setCategoryName] = useState("");
