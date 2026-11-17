@@ -53,10 +53,11 @@ export default function CheckoutPage(){
   }catch(e){setMessage(e instanceof Error?e.message:"Checkout failed.");setBusy(false);}
  }
  if(loading)return <main className="container section"><p>Loading your shopping bag…</p></main>;
+ if(products.length===0)return <main className="container" style={{paddingTop:28,paddingBottom:70,maxWidth:1100}}><header style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:22,borderBottom:"1px solid var(--line)"}}><Link href="/shop" className="back-link"><ArrowLeft size={16}/> CONTINUE SHOPPING</Link><Link href="/shop" className="brand">KURINJI<small>CREATIONS</small></Link></header><section className="admin-empty"><ShoppingBag size={28}/><h2>Your bag is empty</h2><Link className="primary-button" href="/shop">EXPLORE JEWELLERY</Link></section></main>;
  return <main className="container" style={{paddingTop:28,paddingBottom:70,maxWidth:1100}}>
   <header style={{display:"flex",justifyContent:"space-between",alignItems:"center",paddingBottom:22,borderBottom:"1px solid var(--line)"}}><Link href="/shop" className="back-link"><ArrowLeft size={16}/> CONTINUE SHOPPING</Link><Link href="/shop" className="brand">KURINJI<small>CREATIONS</small></Link><span style={{fontSize:10,color:"var(--muted)"}}><LockKeyhole size={13} style={{display:"inline",verticalAlign:"middle"}}/> SECURE CHECKOUT</span></header>
   <h1 style={{fontSize:30,fontWeight:700,margin:"30px 0 8px"}}>Checkout</h1><p style={{fontSize:12,color:"var(--muted)",marginBottom:25}}>Review your pieces and add delivery details.</p>
-  {products.length===0?<section className="admin-empty"><ShoppingBag size={28}/><h2>Your bag is empty</h2><Link className="primary-button" href="/shop">EXPLORE JEWELLERY</Link></section>:<div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(min(100%,320px),1fr))",gap:34}}>
+  <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:34}}>
    <section><h2 style={{fontSize:16,fontWeight:700,marginBottom:14}}>Your items ({Object.values(quantities).reduce((a,b)=>a+b,0)})</h2>{products.map(p=><article key={p.id} style={{display:"flex",gap:14,padding:"14px 0",borderBottom:"1px solid var(--line)"}}>{p.image?<img src={p.image} alt={p.name} style={{width:88,height:100,objectFit:"cover",background:"var(--deep)"}/>:null}<div style={{flex:1}}><Link href={"/products/"+p.slug} style={{fontWeight:600,color:"var(--ink)",textDecoration:"none"}}>{p.name}</Link><p style={{fontSize:12,margin:"7px 0"}}>{money(p.price)}</p><div className="quantity-control"><button onClick={()=>updateQty(p.id,(quantities[p.id]||1)-1)}><Minus size={14}/></button><span>{quantities[p.id]||1}</span><button onClick={()=>updateQty(p.id,Math.min(p.stock,(quantities[p.id]||1)+1))}><Plus size={14}/></button></div><button onClick={()=>updateQty(p.id,0)} style={{display:"block",border:0,background:"none",padding:"8px 0",fontSize:10,color:"var(--muted)"}}><Trash2 size={12} style={{display:"inline",verticalAlign:"middle"}}/> Remove</button></div><strong>{money(p.price*(quantities[p.id]||0))}</strong></article>)}
    <div style={{display:"flex",justifyContent:"space-between",padding:"18px 0",fontWeight:700}}>Subtotal <span>{money(total)}</span></div><p style={{fontSize:10,color:"var(--muted)"}}>Delivery charges, if applicable, will be confirmed by the store.</p></section>
    <section style={{background:"var(--white)",padding:22,border:"1px solid var(--line)",alignSelf:"start"}}><h2 style={{fontSize:17,fontWeight:700,margin:"0 0 18px"}}>Delivery details</h2><form onSubmit={e=>{e.preventDefault();void pay();}} style={{display:"grid",gap:13}}>
@@ -68,7 +69,7 @@ export default function CheckoutPage(){
     <button className="primary-button" disabled={busy} type="submit" style={{width:"100%"}}>{busy?"PLEASE WAIT…":"PAY "+money(total)+" SECURELY"} <ShieldCheck size={15}/></button>
     {message&&<p role="status" style={{fontSize:11,color:"#9b4e40",lineHeight:1.6}}>{message}</p>}
    </form><p style={{fontSize:10,color:"var(--muted)",lineHeight:1.6,marginTop:14}}>Payments are processed by Razorpay. Your card/UPI details are handled by Razorpay, not stored by this website.</p></section>
-  </div>}
+  </div>
  </main>;
 }
 declare global {interface Window {Razorpay?:new(options:any)=>{open:()=>void}}}
