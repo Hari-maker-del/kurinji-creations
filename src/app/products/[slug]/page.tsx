@@ -3,7 +3,7 @@ import {useEffect,useMemo,useState} from "react";
 import {createClient} from "@/lib/supabase/client";
 import Link from "next/link";
 import {useParams} from "next/navigation";
-import {ArrowLeft,ArrowRight,Heart,Minus,Plus,MessageCircle,ShieldCheck,PackageCheck,Truck} from "lucide-react";
+import {ArrowLeft,ArrowRight,Heart,Minus,Plus,MessageCircle,ShieldCheck,PackageCheck,Truck,ShoppingBag} from "lucide-react";
 
 type RazorpaySuccess={razorpay_order_id:string;razorpay_payment_id:string;razorpay_signature:string};
 declare global { interface Window { Razorpay?: new (options:any)=>{open:()=>void}; } }
@@ -59,7 +59,7 @@ export default function ProductPage(){
  const related=useMemo(()=>catalogue.filter(p=>p.id!==product.id).slice(0,3),[product.id]);
  return <main className="detail-page">
   <div className="promo">A LITTLE SOMETHING LOVELY · KURINJI CREATIONS</div>
-  <header className="container detail-header"><Link href="/" className="back-link"><ArrowLeft size={17}/> <span>BACK TO SHOP</span></Link><Link href="/" className="brand">KURINJI<small>CREATIONS</small></Link><span className="detail-header-note">THE LITTLE DETAILS</span></header>
+  <header className="container detail-header"><Link href="/shop" className="back-link"><ArrowLeft size={17}/> <span>BACK TO SHOP</span></Link><Link href="/shop" className="brand">KURINJI<small>CREATIONS</small></Link><span className="detail-header-note">THE LITTLE DETAILS</span></header>
   <div className="container detail-layout">
    <section className="detail-gallery">
     <div className="detail-main-photo"><img src={product.images[photo]||catalogue[0].images[0]} alt={product.name+" jewellery view"}/><span className="detail-photo-tag">{product.tag||"CURATED FOR YOU"}</span></div>
@@ -78,6 +78,7 @@ export default function ProductPage(){
     {product.allowsCustomization&&<div className="detail-customize"><div className="kicker">MAKE IT YOURS</div><h2>Personalise this piece</h2><p>{product.customizationNotes||"Ask us about available colour and design options."}</p><label>Preferred colour or charm<input value={customColour} onChange={e=>setCustomColour(e.target.value)} placeholder="e.g. lavender, rose pink, blue"/></label><label>Any other design request<textarea value={customRequest} onChange={e=>setCustomRequest(e.target.value)} rows={3} placeholder="Tell us how you would like your piece customised…"/></label><small>We’ll confirm available options with you before accepting the order.</small></div>}
     <div className="quantity-label">QUANTITY</div>
     <div className="quantity-control"><button onClick={()=>setQty(q=>Math.max(1,q-1))} aria-label="Decrease quantity"><Minus size={15}/></button><span>{qty}</span><button onClick={()=>setQty(q=>Math.min(10,q+1))} aria-label="Increase quantity"><Plus size={15}/></button></div>
+    <button className="primary-button detail-order" type="button" style={{width:"100%",marginTop:14}} onClick={()=>{const key="kurinji_cart_v1";let ids:string[]=[];try{const parsed=JSON.parse(localStorage.getItem(key)||"[]");if(Array.isArray(parsed))ids=parsed.filter((x):x is string=>typeof x==="string");}catch{}localStorage.setItem(key,JSON.stringify([...ids,...Array(qty).fill(product.id)]));setOrderMessage("Added to your shopping bag.");}}>ADD TO BAG <ShoppingBag size={15}/></button>
     <form className="detail-enquiry-form" onSubmit={async(event)=>{event.preventDefault();setSubmitting(true);setOrderMessage("");const supabase=createClient();const {error}=await supabase.from("store_orders").insert({customer_name:customerName.trim(),phone:customerPhone.trim(),email:customerEmail.trim()||null,address:customerAddress.trim()||null,customer_note:[customerNote.trim(),customColour?"Preferred colour/charm: "+customColour:"",customRequest?"Custom design: "+customRequest:""].filter(Boolean).join("\n")||null,items:[{product_id:product.id,name:product.name,quantity:qty,unit_price_paise:Math.round(product.price*100)}],subtotal_paise:Math.round(product.price*qty*100)});setSubmitting(false);if(error){setOrderMessage("We couldn't submit your enquiry. Please try WhatsApp instead.");return;}setOrderMessage("Your enquiry has been received! Kurinji Creations will contact you to confirm availability, delivery and payment.");setCustomerName("");setCustomerPhone("");setCustomerEmail("");setCustomerAddress("");setCustomerNote("");}}>
       <div className="kicker">READY TO MAKE IT YOURS?</div><h2>Send an order enquiry</h2><p>Your request is saved for the store owner. This is not a payment or confirmed order yet.</p>
       <label>Your name *<input required minLength={2} maxLength={100} value={customerName} onChange={e=>setCustomerName(e.target.value)} placeholder="Full name"/></label>
@@ -95,7 +96,7 @@ export default function ProductPage(){
    </section>
   </div>
   <section className="container related-section"><div className="kicker">MORE TO LOVE</div><h2 className="section-title">You may also like</h2><div className="related-grid">{related.map(p=><Link href={"/products/"+(p.slug||p.id)} key={p.id} className="related-card"><img src={p.images[0]} alt={p.name}/><span>{p.name}</span><strong>{money(p.price)}</strong></Link>)}</div></section>
-  <footer className="container footer detail-footer"><div style={{textAlign:"center"}}><div className="brand">KURINJI<small>CREATIONS</small></div><p className="detail-footer-note">ELEGANCE IN EVERY DETAIL</p><Link href="/" className="text-link">CONTINUE SHOPPING</Link></div></footer>
+  <footer className="container footer detail-footer"><div style={{textAlign:"center"}}><div className="brand">KURINJI<small>CREATIONS</small></div><p className="detail-footer-note">ELEGANCE IN EVERY DETAIL</p><Link href="/shop" className="text-link">CONTINUE SHOPPING</Link></div></footer>
   <a href={"https://wa.me/?text="+encodeURIComponent("Hello Kurinji Creations! I have a question about your jewellery.")} target="_blank" rel="noreferrer" className="detail-whatsapp" aria-label="Chat on WhatsApp"><MessageCircle size={21}/></a>
  </main>;
 }
