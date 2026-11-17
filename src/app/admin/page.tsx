@@ -38,7 +38,7 @@ export default function AdminPage() {
   const [tab, setTab] = useState<"overview" | "products" | "categories">("overview");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
-  const [editing, setEditing] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);\n  const [formOpen, setFormOpen] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [notice, setNotice] = useState("");
   const [categoryName, setCategoryName] = useState("");
@@ -84,7 +84,7 @@ export default function AdminPage() {
   }
 
   function editProduct(product: Product) {
-    setEditing(product.id);
+    setEditing(product.id); setFormOpen(true);
     setForm({
       name: product.name, category_id: product.category_id ?? "", price: String(product.price_paise / 100),
       compare_price: product.compare_at_price_paise ? String(product.compare_at_price_paise / 100) : "",
@@ -99,7 +99,7 @@ export default function AdminPage() {
   }
 
   function newProduct() {
-    setEditing(null); setForm(emptyForm); setImages([]); setTab("products");
+    setEditing(null); setFormOpen(true); setForm(emptyForm); setImages([]); setTab("products");
   }
 
   async function saveProduct(event: FormEvent) {
@@ -140,7 +140,7 @@ export default function AdminPage() {
       }
     }
     if (error) setNotice(error.message);
-    else { setNotice(editing ? "Product updated successfully." : "Product created successfully."); setForm(emptyForm); setEditing(null); setImages([]); await loadData(); }
+    else { setNotice(editing ? "Product updated successfully." : "Product created successfully."); setForm(emptyForm); setEditing(null); setFormOpen(false); setImages([]); await loadData(); }
     setBusy(false);
   }
 
@@ -198,7 +198,7 @@ export default function AdminPage() {
           {products.length===0?<div className="admin-empty"><div className="admin-empty-icon"><ImagePlus size={24}/></div><h3>Your first piece starts here.</h3><p>Add your real jewellery photos, price and details. Products stay hidden until you choose to publish them.</p><button className="admin-primary compact" onClick={newProduct}><Plus size={16}/> Add your first product</button></div>:<div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>PRODUCT</th><th>PRICE</th><th>STOCK</th><th>STATUS</th><th/></tr></thead><tbody>{products.slice(0,6).map(p=><tr key={p.id}><td><div className="admin-product-cell"><img src={p.product_images?.find(i=>i.is_primary)?.image_url||p.product_images?.[0]?.image_url||"/placeholder.txt"} alt=""/><div><strong>{p.name}</strong><small>{p.sku||"No SKU"}</small></div></div></td><td>{money(p.price_paise)}</td><td>{p.stock_quantity}</td><td><span className={p.is_active?"admin-status live":"admin-status draft"}>{p.is_active?"Published":"Draft"}</span></td><td><button className="admin-icon-action" onClick={()=>editProduct(p)} aria-label="Edit product"><Pencil size={15}/></button></td></tr>)}</tbody></table></div>}</div>
         </>}
         {tab==="products"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">COLLECTION MANAGEMENT</div><h1>{editing?"Edit product":"Products"}</h1><p>Add, update and publish the pieces in your boutique.</p></div>{!editing&&<button className="admin-primary compact" onClick={newProduct}><Plus size={16}/> New product</button>}</div>
-          {editing!==null||form.name!==""?<form className="admin-panel admin-product-form" onSubmit={saveProduct}><div className="admin-panel-head"><div><div className="admin-eyebrow">{editing?"UPDATE YOUR PIECE":"NEW ARRIVAL"}</div><h2>Product details</h2></div><button type="button" className="admin-icon-action" onClick={()=>{setEditing(null);setForm(emptyForm);setImages([])}}><X size={18}/></button></div>
+          {formOpen?<form className="admin-panel admin-product-form" onSubmit={saveProduct}><div className="admin-panel-head"><div><div className="admin-eyebrow">{editing?"UPDATE YOUR PIECE":"NEW ARRIVAL"}</div><h2>Product details</h2></div><button type="button" className="admin-icon-action" onClick={()=>{setEditing(null);setFormOpen(false);setForm(emptyForm);setImages([])}}><X size={18}/></button></div>
             <div className="admin-form-grid"><label>Product name *<input required value={form.name} onChange={e=>setForm({...form,name:e.target.value})} placeholder="e.g. Purple Bloom Invisible Chain"/></label><label>Category<select value={form.category_id} onChange={e=>setForm({...form,category_id:e.target.value})}><option value="">Choose category</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label>Price (₹) *<input required type="number" min="0" step="1" value={form.price} onChange={e=>setForm({...form,price:e.target.value})} placeholder="499"/></label><label>Compare-at price (₹)<input type="number" min="0" step="1" value={form.compare_price} onChange={e=>setForm({...form,compare_price:e.target.value})} placeholder="Optional"/></label><label>SKU / product code<input value={form.sku} onChange={e=>setForm({...form,sku:e.target.value})} placeholder="KC-001"/></label><label>Available stock<input type="number" min="0" step="1" value={form.stock} onChange={e=>setForm({...form,stock:e.target.value})}/></label><label className="span-two">Short description<input value={form.short_description} onChange={e=>setForm({...form,short_description:e.target.value})} placeholder="A delicate floral charm for everyday elegance"/></label><label className="span-two">Full description<textarea rows={3} value={form.description} onChange={e=>setForm({...form,description:e.target.value})} placeholder="Describe the design, finish, size and what makes this piece special."/></label><label>Material / finish<input value={form.material} onChange={e=>setForm({...form,material:e.target.value})} placeholder="Gold-tone fittings, invisible thread…"/></label><label>Care instructions<input value={form.care} onChange={e=>setForm({...form,care:e.target.value})}/></label></div>
             <div className="admin-upload"><div><strong><Camera size={17}/> Product photographs</strong><small>JPG, PNG or WebP · up to 5 MB each</small></div><label className="admin-upload-button"><ImagePlus size={16}/> Choose photos<input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e=>setImages(Array.from(e.target.files??[]).filter(f=>f.size<=5*1024*1024))}/></label></div>{images.length>0&&<p className="admin-upload-count">{images.length} photo(s) selected: {images.map(f=>f.name).join(", ")}</p>}
             <div className="admin-checks"><label><input type="checkbox" checked={form.featured} onChange={e=>setForm({...form,featured:e.target.checked})}/> Feature this product</label><label><input type="checkbox" checked={form.active} onChange={e=>setForm({...form,active:e.target.checked})}/> Publish on storefront</label><label><input type="checkbox" checked={form.customizable} onChange={e=>setForm({...form,customizable:e.target.checked})}/> Customers can request custom colours / designs</label></div>
