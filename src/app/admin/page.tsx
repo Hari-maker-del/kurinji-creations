@@ -34,7 +34,8 @@ export default function AdminPage() {
   const [loginError, setLoginError] = useState("");
   const [busy, setBusy] = useState(false);
   const [authorized, setAuthorized] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);\n  const [orders, setOrders] = useState<StoreOrder[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [orders, setOrders] = useState<StoreOrder[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tab, setTab] = useState<"overview" | "products" | "categories" | "orders">("overview");
   const [search, setSearch] = useState("");
@@ -51,7 +52,8 @@ export default function AdminPage() {
       supabase.from("products").select("*,product_categories(name),product_images(id,image_url,is_primary,sort_order)").order("created_at", { ascending: false })
     ]);
     setCategories((categoryRows ?? []) as Category[]);
-    setProducts((productRows ?? []) as Product[]);\n    setOrders((orderRows ?? []) as StoreOrder[]);
+    setProducts((productRows ?? []) as Product[]);
+    setOrders((orderRows ?? []) as StoreOrder[]);
   }, [supabase]);
 
   const verifySession = useCallback(async () => {
@@ -157,7 +159,12 @@ export default function AdminPage() {
     if (error) setNotice(error.message); else { setNotice("Product deleted."); await loadData(); }
   }
 
-  async function updateOrderStatus(order: StoreOrder, status: StoreOrder["status"]) {\n    const { error } = await supabase.from("store_orders").update({ status }).eq("id", order.id);\n    if (error) setNotice(error.message); else { setNotice(`Order #${order.order_number} updated.`); await loadData(); }\n  }\n\n  async function addCategory(event: FormEvent) {
+  async function updateOrderStatus(order: StoreOrder, status: StoreOrder["status"]) {
+    const { error } = await supabase.from("store_orders").update({ status }).eq("id", order.id);
+    if (error) setNotice(error.message); else { setNotice(`Order #${order.order_number} updated.`); await loadData(); }
+  }
+
+  async function addCategory(event: FormEvent) {
     event.preventDefault();
     const name = categoryName.trim(); if (!name) return;
     const { error } = await supabase.from("product_categories").insert({ name, slug: slugify(name), sort_order: categories.length + 1, is_active: true });
@@ -187,7 +194,8 @@ export default function AdminPage() {
     <aside className="admin-sidebar"><a href="/" className="admin-side-brand">KURINJI<small>CREATIONS · STUDIO</small></a><div className="admin-side-label">WORKSPACE</div>
       <button className={tab==="overview"?"selected":""} onClick={()=>setTab("overview")}><LayoutDashboard size={17}/> Overview</button>
       <button className={tab==="products"?"selected":""} onClick={()=>setTab("products")}><ShoppingBag size={17}/> Products <span>{products.length}</span></button>
-      <button className={tab==="categories"?"selected":""} onClick={()=>setTab("categories")}><ClipboardList size={17}/> Categories</button>\n      <button className={tab==="orders"?"selected":""} onClick={()=>setTab("orders")}><Package size={17}/> Orders <span>{orders.filter(o=>o.status==="new").length}</span></button>
+      <button className={tab==="categories"?"selected":""} onClick={()=>setTab("categories")}><ClipboardList size={17}/> Categories</button>
+      <button className={tab==="orders"?"selected":""} onClick={()=>setTab("orders")}><Package size={17}/> Orders <span>{orders.filter(o=>o.status==="new").length}</span></button>
       <div className="admin-side-bottom"><div className="admin-user"><div className="admin-avatar">{userEmail.slice(0,1).toUpperCase()}</div><div><strong>Store owner</strong><small>{userEmail}</small></div></div><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </aside>
     <section className="admin-main">
