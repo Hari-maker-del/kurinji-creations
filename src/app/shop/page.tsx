@@ -15,6 +15,7 @@ export default function Home(){
  const[products,setProducts]=useState<Product[]>(sampleProducts),[liveCatalogue,setLiveCatalogue]=useState(false);
  const[cart,setCart]=useState<string[]>([]),[wishlist,setWishlist]=useState<string[]>([]),[active,setActive]=useState("Home"),[toast,setToast]=useState(""),[searchOpen,setSearchOpen]=useState(false),[query,setQuery]=useState(""),[menuOpen,setMenuOpen]=useState(false),[cartOpen,setCartOpen]=useState(false);
  useEffect(()=>{try{const saved=JSON.parse(localStorage.getItem("kurinji_cart_v1")||"[]");if(Array.isArray(saved))setCart(saved.filter((x):x is string=>typeof x==="string"));}catch{}},[]);
+ useEffect(()=>{const category=new URLSearchParams(window.location.search).get("category");if(category){setQuery(category);setSearchOpen(true);setActive("Shop");}},[]);
  useEffect(()=>{localStorage.setItem("kurinji_cart_v1",JSON.stringify(cart));},[cart]);
  useEffect(()=>{
   if(!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) return;
