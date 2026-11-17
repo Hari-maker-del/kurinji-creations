@@ -5,6 +5,8 @@ import Link from "next/link";
 import {useParams} from "next/navigation";
 import {ArrowLeft,ArrowRight,Heart,Minus,Plus,MessageCircle,ShieldCheck,PackageCheck,Truck} from "lucide-react";
 
+type RazorpaySuccess={razorpay_order_id:string;razorpay_payment_id:string;razorpay_signature:string};
+declare global { interface Window { Razorpay?: new (options:any)=>{open:()=>void}; } }
 type ProductDetail={id:string;slug?:string;name:string;category:string;price:number;tag?:string;images:string[];description:string;material:string;care:string;allowsCustomization:boolean;customizationNotes:string};
 const catalogue:ProductDetail[]=[
 {id:"1",slug:"golden-hour-hoops",name:"Golden Hour Hoops",category:"Earrings",price:399,tag:"Bestseller",images:["https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1200&q=90","https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1200&q=90"],description:"A warm golden accent for everyday moments. These hoops bring a little glow to your everyday edit and pair beautifully with both relaxed and dressed-up looks.",material:"Imitation jewellery · finish details to be confirmed",care:"Keep away from water, perfume and harsh chemicals. Store in a dry pouch.",allowsCustomization:false,customizationNotes:""},
@@ -32,6 +34,28 @@ export default function ProductPage(){
   });
  },[params.slug]);
  const orderText=encodeURIComponent("Hello Kurinji Creations! I would like to enquire about "+product.name+" (Qty: "+qty+")."+(customColour?" Preferred colour: "+customColour+".":"")+(customRequest?" Custom request: "+customRequest+".":"")+" Please confirm availability, customisation and delivery details.");
+
+ async function startRazorpayPayment(){
+  if(!customerName.trim()||customerPhone.trim().length<8){setOrderMessage("Please enter your name and phone number first.");return;}
+  setSubmitting(true);setOrderMessage("");
+  try{
+   const response=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName,phone:customerPhone,email:customerEmail,address:customerAddress,note:[customerNote,customColour?"Preferred colour/charm: "+customColour:"",customRequest?"Custom design: "+customRequest:""].filter(Boolean).join("\n"),items:[{productId:product.id,quantity:qty}]})});
+   const order=await response.json();
+   if(!response.ok)throw new Error(order.error||"Unable to start secure checkout.");
+   if(!window.Razorpay){
+    await new Promise<void>((resolve,reject)=>{const script=document.createElement("script");script.src="https://checkout.razorpay.com/v1/checkout.js";script.onload=()=>resolve();script.onerror=()=>reject(new Error("Unable to load secure checkout."));document.body.appendChild(script);});
+   }
+   if(!window.Razorpay)throw new Error("Secure checkout is unavailable. Please try again.");
+   const checkout=new window.Razorpay({key:order.keyId,amount:order.amount,currency:order.currency,name:"Kurinji Creations",description:product.name,order_id:order.razorpayOrderId,prefill:{name:customerName,contact:customerPhone,email:customerEmail},theme:{color:"#8a6b4d"},handler:async(payment:RazorpaySuccess)=>{
+    setSubmitting(true);
+    const verification=await fetch("/api/payments/verify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:order.orderId,razorpayOrderId:payment.razorpay_order_id,razorpayPaymentId:payment.razorpay_payment_id,razorpaySignature:payment.razorpay_signature})});
+    const result=await verification.json();setSubmitting(false);
+    if(!verification.ok){setOrderMessage(result.error||"Payment received; confirmation is pending. Please contact the store.");return;}
+    setOrderMessage("Payment successful! Your order #"+result.orderNumber+" is confirmed. Kurinji Creations will contact you shortly.");
+   },modal:{ondismiss:()=>setSubmitting(false)}});
+   setSubmitting(false);checkout.open();
+  }catch(error){setSubmitting(false);setOrderMessage(error instanceof Error?error.message:"Unable to start payment.");}
+ }
  const related=useMemo(()=>catalogue.filter(p=>p.id!==product.id).slice(0,3),[product.id]);
  return <main className="detail-page">
   <div className="promo">A LITTLE SOMETHING LOVELY · KURINJI CREATIONS</div>
@@ -61,7 +85,7 @@ export default function ProductPage(){
       <label>Email (optional)<input type="email" value={customerEmail} onChange={e=>setCustomerEmail(e.target.value)} placeholder="you@example.com"/></label>
       <label>Delivery address (optional)<textarea rows={2} value={customerAddress} onChange={e=>setCustomerAddress(e.target.value)} placeholder="Share your delivery location"/></label>
       <label>Additional note (optional)<textarea rows={2} value={customerNote} onChange={e=>setCustomerNote(e.target.value)} placeholder="Any questions or delivery preferences?"/></label>
-      <button className="primary-button detail-order" type="submit" disabled={submitting}>{submitting?"SENDING ENQUIRY…":"SUBMIT ORDER ENQUIRY"} <ArrowRight size={15}/></button>
+      <button className="primary-button detail-order" type="button" onClick={()=>void startRazorpayPayment()} disabled={submitting}>{submitting?"PLEASE WAIT…":"PAY SECURELY ONLINE"} <ShieldCheck size={15}/></button><button className="detail-enquiry-secondary" type="submit" disabled={submitting}>OR SEND AN ORDER ENQUIRY <ArrowRight size={14}/></button>
       {orderMessage&&<p className="detail-order-message" role="status">{orderMessage}</p>}
     </form>
     <div className="detail-actions"><a className="primary-button detail-order" href={"https://wa.me/?text="+orderText} target="_blank" rel="noreferrer">ENQUIRE / ORDER ON WHATSAPP <ArrowRight size={15}/></a><button className="detail-wish" onClick={()=>setSaved(!saved)} aria-label="Save product"><Heart size={19} fill={saved?"#8f5d58":"none"}/></button></div>
