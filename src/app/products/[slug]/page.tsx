@@ -2,7 +2,7 @@
 import {useEffect,useMemo,useState} from "react";
 import {createClient} from "@/lib/supabase/client";
 import Link from "next/link";
-import {useParams} from "next/navigation";
+import {useParams,useRouter} from "next/navigation";
 import {ArrowLeft,ArrowRight,Heart,Minus,Plus,MessageCircle,ShieldCheck,PackageCheck,Truck,ShoppingBag} from "lucide-react";
 
 type RazorpaySuccess={razorpay_order_id:string;razorpay_payment_id:string;razorpay_signature:string};
@@ -16,6 +16,7 @@ const catalogue:ProductDetail[]=[
 ];
 const money=(v:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(v);
 export default function ProductPage(){
+ const router=useRouter();
  const params=useParams<{slug:string}>(),initialProduct=catalogue.find(p=>p.id===params.slug||p.slug===params.slug)??catalogue[0];
  const [product,setProduct]=useState<ProductDetail>(initialProduct);
  const [photo,setPhoto]=useState(0),[qty,setQty]=useState(1),[saved,setSaved]=useState(false),[customColour,setCustomColour]=useState(""),[customRequest,setCustomRequest]=useState("");
@@ -79,6 +80,7 @@ export default function ProductPage(){
     <div className="quantity-label">QUANTITY</div>
     <div className="quantity-control"><button onClick={()=>setQty(q=>Math.max(1,q-1))} aria-label="Decrease quantity"><Minus size={15}/></button><span>{qty}</span><button onClick={()=>setQty(q=>Math.min(10,q+1))} aria-label="Increase quantity"><Plus size={15}/></button></div>
     <button className="primary-button detail-order" type="button" style={{width:"100%",marginTop:14}} onClick={()=>{const key="kurinji_cart_v1";let ids:string[]=[];try{const parsed=JSON.parse(localStorage.getItem(key)||"[]");if(Array.isArray(parsed))ids=parsed.filter((x):x is string=>typeof x==="string");}catch{}localStorage.setItem(key,JSON.stringify([...ids,...Array(qty).fill(product.id)]));setOrderMessage("Added to your shopping bag.");}}>ADD TO BAG <ShoppingBag size={15}/></button>
+    <button className="primary-button detail-order" type="button" style={{width:"100%",marginTop:9,background:"#a8794f",borderColor:"#a8794f"}} onClick={()=>{const key="kurinji_cart_v1";localStorage.setItem(key,JSON.stringify(Array(qty).fill(product.id)));const note=[customColour?"Preferred colour/charm: "+customColour:"",customRequest?"Custom design: "+customRequest:""].filter(Boolean).join("\n");if(note)localStorage.setItem("kurinji_checkout_note_v1",note);else localStorage.removeItem("kurinji_checkout_note_v1");router.push("/checkout");}}>BUY NOW <ArrowRight size={15}/></button>
     <form className="detail-enquiry-form" onSubmit={async(event)=>{event.preventDefault();setSubmitting(true);setOrderMessage("");const supabase=createClient();const {error}=await supabase.from("store_orders").insert({customer_name:customerName.trim(),phone:customerPhone.trim(),email:customerEmail.trim()||null,address:customerAddress.trim()||null,customer_note:[customerNote.trim(),customColour?"Preferred colour/charm: "+customColour:"",customRequest?"Custom design: "+customRequest:""].filter(Boolean).join("\n")||null,items:[{product_id:product.id,name:product.name,quantity:qty,unit_price_paise:Math.round(product.price*100)}],subtotal_paise:Math.round(product.price*qty*100)});setSubmitting(false);if(error){setOrderMessage("We couldn't submit your enquiry. Please try WhatsApp instead.");return;}setOrderMessage("Your enquiry has been received! Kurinji Creations will contact you to confirm availability, delivery and payment.");setCustomerName("");setCustomerPhone("");setCustomerEmail("");setCustomerAddress("");setCustomerNote("");}}>
       <div className="kicker">READY TO MAKE IT YOURS?</div><h2>Send an order enquiry</h2><p>Your request is saved for the store owner. This is not a payment or confirmed order yet.</p>
       <label>Your name *<input required minLength={2} maxLength={100} value={customerName} onChange={e=>setCustomerName(e.target.value)} placeholder="Full name"/></label>
