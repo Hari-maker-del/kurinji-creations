@@ -32,7 +32,8 @@ export default function AboutPage() {
         <div className="kc-eyebrow"><span /> COME SAY HELLO</div>
         <h2>We would love to hear <em>from you.</em></h2>
         <p>Have a question about an order or an idea for a personalised piece? Visit our store to explore the collections and find the available ways to get in touch.</p>
-        <Link href="/shop" className="kc-button">VISIT KURINJI STORE <span>↗</span></Link>
+        <a href="https://wa.me/919345858353?text=Hello%20Kurinji%20Creations!%20I%20have%20a%20question." target="_blank" rel="noreferrer" className="kc-button">CHAT ON WHATSAPP <span>↗</span></a>
+        <Link href="/shop" className="kc-text-link">VISIT KURINJI STORE <span>↗</span></Link>
       </section>
       <footer className="kc-footer">
         <Link href="/" className="kc-wordmark">KURINJI CREATIONS<span>JEWELLERY &amp; MORE</span></Link>
