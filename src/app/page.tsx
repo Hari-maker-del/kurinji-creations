@@ -54,7 +54,7 @@ export default function Home() {
           <Link href="/shop" className="kc-text-link">VIEW ALL PIECES <span>↗</span></Link>
         </div>
         <div className="kc-collection-grid">
-          {collections.map((item) => <Link href="/shop" className="kc-collection-card" key={item.name}>
+          {collections.map((item) => <Link href={`/shop?category=${encodeURIComponent(item.name)}`} className="kc-collection-card" key={item.name}>
             <div className="kc-collection-image"><img src={item.image} alt={item.name} loading="lazy" /><span>THE COLLECTION</span></div>
             <div className="kc-collection-meta"><div><h3>{item.name}</h3><p>{item.note}</p></div><span>↗</span></div>
           </Link>)}
@@ -67,7 +67,7 @@ export default function Home() {
           <div className="kc-eyebrow"><span /> MADE A LITTLE MORE YOU</div>
           <h2>Your style.<br /><em>Your colours.</em><br />Your creation.</h2>
           <p>Have a colour in mind or a design you have been dreaming of? Tell us what you love and let us create something that feels uniquely yours.</p>
-          <Link href="/shop" className="kc-button">DISCOVER CUSTOM PIECES <span>↗</span></Link>
+          <Link href="/shop?category=Custom%20Jewellery" className="kc-button">DISCOVER CUSTOM PIECES <span>↗</span></Link>
         </div>
       </section>
 
