@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient();
     const { data: order, error } = await admin.from("store_orders")
-      .select("id,order_number,subtotal_paise,razorpay_order_id,payment_status")
+      .select("id,order_number,subtotal_paise,razorpay_order_id,payment_status,items")
       .eq("id", orderId).maybeSingle();
     if (error || !order || order.razorpay_order_id !== razorpayOrderId) {
       return NextResponse.json({ error: "Order could not be verified." }, { status: 404 });
