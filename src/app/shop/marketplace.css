@@ -96,3 +96,5 @@
 
 .market-wishlist-header{display:flex;position:relative;align-items:center;gap:7px;border:0;background:transparent;color:#786b5c;padding:10px 8px;font-size:10px}.market-wishlist-header b{background:#342c24;color:#fff;border-radius:20px;min-width:16px;height:16px;display:grid;place-items:center;font-size:9px}.market-wishlist-row>div{gap:7px}.market-wishlist-row>div button{border:1px solid #e6ded5;padding:7px 9px;width:max-content;color:#705b45}.market-wishlist-row>div button:first-of-type{background:#342c24;color:#fff;border-color:#342c24}.market-wishlist-row>div button:last-of-type{border:0;padding:3px 0}
 @media(max-width:560px){.market-wishlist-header{padding:8px 5px;gap:4px;font-size:9px}.market-wishlist-header b{min-width:15px;height:15px}}
+
+.market-pricing{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:8px}.market-pricing .market-price{margin-top:0}.market-pricing del{font-size:10px;color:#988e83}.market-discount{font-size:9px;background:#e9f1e6;color:#416744;padding:4px 6px;font-weight:600;letter-spacing:.4px}.market-savings{font-size:9px;color:#4f7651;margin-top:4px}
