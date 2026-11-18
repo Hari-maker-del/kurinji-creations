@@ -3,13 +3,11 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
-
 export async function POST(request: Request) {
   const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
   if (!secret || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return NextResponse.json({ error: "Webhook is not configured." }, { status: 503 });
   }
-
   const rawBody = await request.text();
   const signature = request.headers.get("x-razorpay-signature") ?? "";
   if (!/^[a-f0-9]{64}$/i.test(signature)) {
@@ -26,29 +24,30 @@ export async function POST(request: Request) {
     if (event.event !== "payment.captured" && event.event !== "order.paid") {
       return NextResponse.json({ received: true });
     }
-
     const payment = event.payload?.payment?.entity;
-    const order = event.payload?.order?.entity;
-    const razorpayOrderId = payment?.order_id ?? order?.id;
+    const orderEntity = event.payload?.order?.entity;
+    const razorpayOrderId = payment?.order_id ?? orderEntity?.id;
     const paymentId = payment?.id;
     if (!razorpayOrderId || !paymentId || payment?.status !== "captured" || payment?.currency !== "INR") {
       return NextResponse.json({ received: true });
     }
 
     const admin = createAdminClient();
-    const { data: storeOrder } = await admin.from("store_orders")
-      .select("id,subtotal_paise,payment_status,items")
+    const { data: storeOrder, error: orderError } = await admin.from("store_orders")
+      .select("id,subtotal_paise,payment_status")
       .eq("razorpay_order_id", razorpayOrderId).maybeSingle();
+    if (orderError) return NextResponse.json({ error: "Could not retrieve order." }, { status: 500 });
     if (!storeOrder) return NextResponse.json({ received: true });
-
     if (payment.amount !== storeOrder.subtotal_paise) {
       return NextResponse.json({ error: "Payment amount mismatch." }, { status: 400 });
     }
-    if (storeOrder.payment_status !== "paid") {
-      const { error } = await admin.from("store_orders").update({
-        payment_status: "paid", status: "confirmed", razorpay_payment_id: paymentId
-      }).eq("id", storeOrder.id);
-      if (error) return NextResponse.json({ error: "Could not reconcile payment." }, { status: 500 });
+
+    // Same atomic stock RPC as browser verification. Its adjustment ledger makes retries idempotent.
+    const { data: processed, error: stockError } = await admin.rpc("confirm_paid_order_and_decrement_stock", {
+      p_order_id: storeOrder.id, p_payment_id: paymentId, p_signature: null
+    });
+    if (stockError || processed !== true) {
+      return NextResponse.json({ error: "Could not reconcile payment and inventory." }, { status: 500 });
     }
     return NextResponse.json({ received: true });
   } catch {
