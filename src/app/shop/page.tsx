@@ -1,4 +1,5 @@
 "use client";
+import "./marketplace.css";
 import {useEffect,useMemo,useState} from "react";
 import {createClient} from "@/lib/supabase/client";
 import Link from "next/link";
