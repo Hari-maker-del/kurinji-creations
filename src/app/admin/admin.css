@@ -111,3 +111,5 @@
 @media(max-width:650px){.admin-order-card{padding:17px}.admin-order-top{display:grid}.admin-order-top>strong{font-size:20px}.admin-order-controls{align-items:stretch;flex-direction:column}.admin-order-controls select{width:100%}.detail-enquiry-form{padding:18px;margin:22px 0}}
 
 .detail-enquiry-secondary{border:0;background:transparent;color:#786653;text-decoration:underline;text-underline-offset:4px;font-size:10px;letter-spacing:1px;padding:12px;cursor:pointer}.detail-enquiry-secondary:disabled{opacity:.5;cursor:wait}
+
+.admin-inventory-filters{display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 18px}.admin-inventory-filters button{border:1px solid #e5ded4;background:transparent;padding:9px 13px;font-size:9px;color:#74685c}.admin-inventory-filters button.active{background:#302820;color:#fff;border-color:#302820}.admin-stock-status{border-radius:20px;padding:6px 9px;font-size:8px;letter-spacing:.05em}.admin-stock-status.in{background:#e7efe7;color:#476b4c}.admin-stock-status.low{background:#fff0d9;color:#8a6533}.admin-stock-status.out{background:#f8e8e5;color:#8a3d35}
