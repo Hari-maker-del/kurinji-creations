@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient();
     const { data: storeOrder } = await admin.from("store_orders")
-      .select("id,subtotal_paise,payment_status")
+      .select("id,subtotal_paise,payment_status,items")
       .eq("razorpay_order_id", razorpayOrderId).maybeSingle();
     if (!storeOrder) return NextResponse.json({ received: true });
 
