@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import {ArrowLeft,LockKeyhole,Minus,Plus,ShoppingBag,Trash2,ShieldCheck} from "lucide-react";
 import {createClient} from "@/lib/supabase/client";
+import "./checkout.css";
 
 type Product={id:string;slug:string;name:string;price:number;image:string;stock:number};
 const KEY="kurinji_cart_v1";
@@ -14,7 +15,9 @@ export default function CheckoutPage(){
  const [quantities,setQuantities]=useState<Record<string,number>>({});
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
  const [name,setName]=useState(""),[phone,setPhone]=useState(""),[email,setEmail]=useState(""),[address,setAddress]=useState(""),[note,setNote]=useState("");
+ const [couponInput,setCouponInput]=useState(""),[couponCode,setCouponCode]=useState(""),[couponDiscount,setCouponDiscount]=useState(0),[couponMessage,setCouponMessage]=useState(""),[couponBusy,setCouponBusy]=useState(false);
  const total=useMemo(()=>products.reduce((s,p)=>s+p.price*(quantities[p.id]||0),0),[products,quantities]);
+ const payableTotal=Math.max(0,total-couponDiscount/100);
  useEffect(()=>{
   const savedNote=localStorage.getItem("kurinji_checkout_note_v1");
   if(savedNote)setNote(savedNote);
@@ -31,7 +34,16 @@ export default function CheckoutPage(){
    setLoading(false);
   });
  },[]);
+ async function applyCoupon(){
+  const code=couponInput.trim().toUpperCase();if(!code){setCouponMessage("Enter a promotion code.");return;}
+  setCouponBusy(true);setCouponMessage("");
+  try{const response=await fetch("/api/promotions/validate",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({code,subtotalPaise:Math.round(total*100)})});const result=await response.json();if(!response.ok)throw new Error(result.error||"This code could not be applied.");setCouponCode(result.code);setCouponDiscount(result.discountPaise);setCouponMessage("Promotion applied successfully.");}
+  catch(error){setCouponCode("");setCouponDiscount(0);setCouponMessage(error instanceof Error?error.message:"Unable to apply promotion.");}
+  finally{setCouponBusy(false);}
+ }
+ function removeCoupon(){setCouponCode("");setCouponDiscount(0);setCouponMessage("Promotion removed.");setCouponInput("");}
  function updateQty(id:string,next:number){
+  if(couponCode){setCouponCode("");setCouponDiscount(0);setCouponMessage("Bag changed. Apply your promotion again.");}
   const value=Math.max(0,Math.min(10,next));
   setQuantities(old=>{const updated={...old};if(value===0)delete updated[id];else updated[id]=value;localStorage.setItem(KEY,JSON.stringify(Object.entries(updated).flatMap(([key,q])=>Array(q).fill(key))));return updated;});
   if(value===0)setProducts(old=>old.filter(p=>p.id!==id));
@@ -42,7 +54,7 @@ export default function CheckoutPage(){
   setBusy(true);setMessage("");
   try{
    const items=products.map(p=>({productId:p.id,quantity:quantities[p.id]||1}));
-   const response=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:name,phone,email,address,note,items})});
+   const response=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:name,phone,email,address,note,items,couponCode})});
    const order=await response.json();if(!response.ok)throw new Error(order.error||"Unable to create order.");
    if(!window.Razorpay){await new Promise<void>((resolve,reject)=>{const script=document.createElement("script");script.src="https://checkout.razorpay.com/v1/checkout.js";script.onload=()=>resolve();script.onerror=()=>reject(new Error("Payment window could not load."));document.body.appendChild(script);});}
    if(!window.Razorpay)throw new Error("Razorpay checkout is unavailable.");
@@ -61,14 +73,15 @@ export default function CheckoutPage(){
   <h1 style={{fontSize:30,fontWeight:700,margin:"30px 0 8px"}}>Checkout</h1><p style={{fontSize:12,color:"var(--muted)",marginBottom:25}}>Review your pieces and add delivery details.</p>
   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(320px,1fr))",gap:34}}>
    <section><h2 style={{fontSize:16,fontWeight:700,marginBottom:14}}>Your items ({Object.values(quantities).reduce((a,b)=>a+b,0)})</h2>{products.map(p=><article key={p.id} style={{display:"flex",gap:14,padding:"14px 0",borderBottom:"1px solid var(--line)"}}><img src={p.image||"/placeholder-jewellery.jpg"} alt={p.name} style={{width:88,height:100,objectFit:"cover",background:"var(--deep)"}}/><div style={{flex:1}}><Link href={"/products/"+p.slug} style={{fontWeight:600,color:"var(--ink)",textDecoration:"none"}}>{p.name}</Link><p style={{fontSize:12,margin:"7px 0"}}>{money(p.price)}</p><p style={{fontSize:10,color:p.stock<=0?"#9b4e40":p.stock<=3?"#a8794f":"#61745d"}}>{p.stock<=0?"Out of stock":p.stock<=3?"Only "+p.stock+" left":"In stock · "+p.stock+" available"}</p><div className="quantity-control"><button onClick={()=>updateQty(p.id,(quantities[p.id]||1)-1)}><Minus size={14}/></button><span>{quantities[p.id]||1}</span><button disabled={p.stock<=0||(quantities[p.id]||1)>=p.stock} onClick={()=>updateQty(p.id,Math.min(p.stock,(quantities[p.id]||1)+1))}><Plus size={14}/></button></div><button onClick={()=>updateQty(p.id,0)} style={{display:"block",border:0,background:"none",padding:"8px 0",fontSize:10,color:"var(--muted)"}}><Trash2 size={12} style={{display:"inline",verticalAlign:"middle"}}/> Remove</button></div><strong>{money(p.price*(quantities[p.id]||0))}</strong></article>)}
-   <div style={{display:"flex",justifyContent:"space-between",padding:"18px 0",fontWeight:700}}>Subtotal <span>{money(total)}</span></div><p style={{fontSize:10,color:"var(--muted)"}}>Delivery charges, if applicable, will be confirmed by the store.</p></section>
+   <div className="kc-coupon-box"><strong>Promotion code</strong><div><input aria-label="Promotion code" value={couponInput} onChange={e=>setCouponInput(e.target.value.toUpperCase())} placeholder="Enter code" disabled={!!couponCode}/>{couponCode?<button type="button" onClick={removeCoupon}>Remove</button>:<button type="button" onClick={()=>void applyCoupon()} disabled={couponBusy}>{couponBusy?"Checking…":"Apply"}</button>}</div>{couponMessage&&<small role="status">{couponMessage}</small>}</div>
+   <div style={{display:"grid",gap:8,padding:"18px 0",fontSize:12}}><div style={{display:"flex",justifyContent:"space-between"}}>Subtotal <span>{money(total)}</span></div>{couponCode&&<div style={{display:"flex",justifyContent:"space-between",color:"#52704f"}}>Promotion ({couponCode}) <span>−{money(couponDiscount/100)}</span></div>}<div style={{display:"flex",justifyContent:"space-between",fontWeight:700,borderTop:"1px solid var(--line)",paddingTop:12}}>Total <span>{money(payableTotal)}</span></div></div><p style={{fontSize:10,color:"var(--muted)"}}>Delivery charges, if applicable, will be confirmed by the store.</p></section>
    <section style={{background:"var(--white)",padding:22,border:"1px solid var(--line)",alignSelf:"start"}}><h2 style={{fontSize:17,fontWeight:700,margin:"0 0 18px"}}>Delivery details</h2><form onSubmit={e=>{e.preventDefault();void pay();}} style={{display:"grid",gap:13}}>
     <label style={{fontSize:11}}>Full name *<input required minLength={2} maxLength={100} value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></label>
     <label style={{fontSize:11}}>Phone / WhatsApp *<input required minLength={8} maxLength={20} value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+91 98765 43210"/></label>
     <label style={{fontSize:11}}>Email (optional)<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>
     <label style={{fontSize:11}}>Full delivery address *<textarea required rows={3} value={address} onChange={e=>setAddress(e.target.value)} placeholder="House, street, city, state and PIN code"/></label>
     <label style={{fontSize:11}}>Order note (optional)<textarea rows={2} value={note} onChange={e=>setNote(e.target.value)} placeholder="Custom colour, charm or gift request"/></label>
-    <button className="primary-button" disabled={busy} type="submit" style={{width:"100%"}}>{busy?"PLEASE WAIT…":"PAY "+money(total)+" SECURELY"} <ShieldCheck size={15}/></button>
+    <button className="primary-button" disabled={busy} type="submit" style={{width:"100%"}}>{busy?"PLEASE WAIT…":"PAY "+money(payableTotal)+" SECURELY"} <ShieldCheck size={15}/></button>
     {message&&<p role="status" style={{fontSize:11,color:"#9b4e40",lineHeight:1.6}}>{message}</p>}
    </form><p style={{fontSize:10,color:"var(--muted)",lineHeight:1.6,marginTop:14}}>Payments are processed by Razorpay. Your card/UPI details are handled by Razorpay, not stored by this website.</p></section>
   </div>
