@@ -231,3 +231,7 @@
 .admin-loyalty-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .admin-loyalty-actions .admin-customer-history{flex:1}
 @media(max-width:650px){.admin-loyalty-card{padding:16px}.admin-loyalty-head h3{font-size:21px}.admin-loyalty-head>strong{font-size:20px}}
+
+.admin-referral-code{font-size:10px!important;letter-spacing:.06em;color:#806044!important;margin-top:8px!important}
+.admin-referral-code b{font-size:12px;letter-spacing:.16em;color:#51483e}
+.admin-referral-code button{border:0;background:none;color:#a8794f;text-decoration:underline;font:inherit;cursor:pointer;margin-left:7px}
