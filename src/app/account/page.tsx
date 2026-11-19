@@ -17,6 +17,13 @@ export default function AccountPage(){
  const [phone,setPhone]=useState("");
  const [otp,setOtp]=useState("");
  const [otpSent,setOtpSent]=useState(false);
+ const [loginMode,setLoginMode]=useState<"otp"|"password">("otp");
+ const [password,setPassword]=useState("");
+ const [resetMode,setResetMode]=useState(false);
+ const [resetVerified,setResetVerified]=useState(false);
+ const [newPassword,setNewPassword]=useState("");
+ const [confirmPassword,setConfirmPassword]=useState("");
+ const [changePasswordOpen,setChangePasswordOpen]=useState(false);
  const [loading,setLoading]=useState(true);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
@@ -36,7 +43,7 @@ export default function AccountPage(){
   event.preventDefault();setBusy(true);setError("");setNotice("");
   const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
   if(!/^\d{10}$/.test(digits)){setError("Enter a valid 10-digit Indian mobile number.");setBusy(false);return;}
-  const {error}=await supabase.auth.signInWithOtp({phone:"+91"+digits});
+  const {error}=await supabase.auth.signInWithOtp({phone:"+91"+digits,options:{shouldCreateUser:false}});
   if(error)setError(error.message);else{setOtpSent(true);setNotice("A verification code has been sent to your mobile.");}
   setBusy(false);
  }
@@ -44,7 +51,31 @@ export default function AccountPage(){
   event.preventDefault();setBusy(true);setError("");setNotice("");
   const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
   const {error}=await supabase.auth.verifyOtp({phone:"+91"+digits,token:otp.trim(),type:"sms"});
-  if(error)setError(error.message);else{setOtp("");setOtpSent(false);setLoading(true);await loadAccount();}
+  if(error)setError(error.message);else if(resetMode){setOtp("");setOtpSent(false);setResetVerified(true);setNotice("Your mobile number is verified. Create your new password.");}else{setOtp("");setOtpSent(false);setLoading(true);await loadAccount();}
+  setBusy(false);
+ }
+ async function signInPassword(event:React.FormEvent){
+  event.preventDefault();setBusy(true);setError("");setNotice("");
+  const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
+  if(!/^\\d{10}$/.test(digits)){setError("Enter a valid 10-digit Indian mobile number.");setBusy(false);return;}
+  const {error}=await supabase.auth.signInWithPassword({phone:"+91"+digits,password});
+  if(error)setError(error.message);else{setPassword("");setLoading(true);await loadAccount();}
+  setBusy(false);
+ }
+ async function saveNewPassword(event:React.FormEvent){
+  event.preventDefault();setError("");setNotice("");
+  if(newPassword.length<8){setError("Use at least 8 characters for your password.");return;}
+  if(newPassword!==confirmPassword){setError("Your passwords do not match.");return;}
+  setBusy(true);const {error}=await supabase.auth.updateUser({password:newPassword});
+  if(error)setError(error.message);else{setNewPassword("");setConfirmPassword("");setResetVerified(false);setResetMode(false);setNotice("Your password has been reset successfully.");setLoading(true);await loadAccount();}
+  setBusy(false);
+ }
+ async function changePassword(event:React.FormEvent){
+  event.preventDefault();setError("");setNotice("");
+  if(newPassword.length<8){setError("Use at least 8 characters for your password.");return;}
+  if(newPassword!==confirmPassword){setError("Your passwords do not match.");return;}
+  setBusy(true);const {error}=await supabase.auth.updateUser({password:newPassword});
+  if(error)setError(error.message);else{setNewPassword("");setConfirmPassword("");setChangePasswordOpen(false);setNotice("Your password has been changed.");}
   setBusy(false);
  }
  async function signOut(){await supabase.auth.signOut();setData(null);setPhone("");setOtp("");setOtpSent(false);}
