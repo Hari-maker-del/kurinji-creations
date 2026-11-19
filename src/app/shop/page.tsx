@@ -28,7 +28,7 @@ export default function Home(){
  const notify=(s:string)=>{setToast(s);window.setTimeout(()=>setToast(""),2200)};
  const whatsapp="https://wa.me/919345858353?text="+encodeURIComponent("Hello Kurinji Creations! I would love to know more about your jewellery collection.");
  const cartProducts=products.filter(p=>cart.includes(p.id)),cartQty=(id:string)=>cart.filter(x=>x===id).length,total=cartProducts.reduce((s,p)=>s+p.price*cartQty(p.id),0);
- const add=(p:Product)=>{setCart(a=>[...a,p.id]);notify(p.name+" added to bag")};
+ const add=(p:Product)=>{const already=cart.filter(id=>id===p.id).length;if(p.stock<=0){notify(p.name+" is sold out");return;}if(already>=p.stock){notify("Only "+p.stock+" available for "+p.name);return;}setCart(a=>[...a,p.id]);notify(p.name+" added to bag")};
  const filterPanel=<div className="market-filter-panel"><div className="market-filter-title">Category</div>{categories.map(c=><button key={c} className={"market-filter-option "+(category===c?"selected":"")} onClick={()=>setCategory(c)}>{c}<span>{category===c?"✓":""}</span></button>)}<div className="market-filter-title market-filter-price">Maximum price</div><select value={maxPrice} onChange={e=>setMaxPrice(e.target.value)} className="market-select"><option value="10000">Any price</option><option value="250">Under ₹250</option><option value="500">Under ₹500</option><option value="1000">Under ₹1,000</option><option value="2000">Under ₹2,000</option></select><button className="market-clear" onClick={()=>{setCategory("All");setMaxPrice("10000");setQuery("");setSort("featured")}}>Clear all filters</button></div>;
  return <main className="marketplace">
  <div className="promo market-promo">WELCOME TO KURINJI · LITTLE DETAILS, LASTING MEANING · GIFT-READY PACKAGING</div>
