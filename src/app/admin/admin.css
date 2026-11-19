@@ -116,3 +116,5 @@
 
 /* Live product inventory status */
 .detail-stock{margin:14px 0 18px;font-size:12px;letter-spacing:.02em}.detail-stock-in{color:#60765f}.detail-stock-low{color:#a8794f}.detail-stock-out{color:#9b4e40}.quantity-control button:disabled,.detail-order:disabled{opacity:.38;cursor:not-allowed;pointer-events:none}
+
+.admin-history-empty{font-size:11px;color:#81766a;line-height:1.7;padding:12px 0}.admin-stock-status{white-space:nowrap}
