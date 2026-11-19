@@ -50,7 +50,8 @@ export default function CheckoutPage(){
  }
  async function pay(){
   if(!name.trim()||phone.trim().length<8||!address.trim()){setMessage("Enter your name, phone number and delivery address.");return;}
-  if(!products.length){setMessage("Your shopping bag is empty.");return;}\n  const unavailable=products.find(p=>(quantities[p.id]||0)>p.stock||p.stock<=0);if(unavailable){setMessage(unavailable.name+" has only "+unavailable.stock+" available. Please update your bag.");return;}
+  if(!products.length){setMessage("Your shopping bag is empty.");return;}
+  const unavailable=products.find(p=>(quantities[p.id]||0)>p.stock||p.stock<=0);if(unavailable){setMessage(unavailable.name+" has only "+unavailable.stock+" available. Please update your bag.");return;}
   setBusy(true);setMessage("");
   try{
    const items=products.map(p=>({productId:p.id,quantity:quantities[p.id]||1}));
