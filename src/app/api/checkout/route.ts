@@ -20,6 +20,7 @@ export async function POST(request: Request) {
     const address = String(body.address ?? "").trim();
     const note = String(body.note ?? "").trim();
     const couponCode = String(body.couponCode ?? "").trim().toUpperCase().replace(/\s+/g, "");
+    const referralCode = String(body.referralCode ?? "").trim().toUpperCase().replace(/\s+/g, "");
     const items = body.items as CheckoutItem[];
 
     if (customerName.length < 2 || customerName.length > 100 || phone.length < 8 || phone.length > 20 ||
@@ -63,6 +64,14 @@ export async function POST(request: Request) {
       discountPaise = Math.max(0, Math.min(subtotal, discountPaise));
       appliedCoupon = promo.code;
     }
+    let referrerAccountId: string | null = null;
+    if (referralCode) {
+      const normalizedPhone = phone.replace(/[^0-9]/g, "");
+      const { data: referralRows, error: referralError } = await admin.rpc("validate_store_referral_code", { p_code: referralCode, p_phone: normalizedPhone });
+      const referral = Array.isArray(referralRows) ? referralRows[0] : null;
+      if (referralError || !referral) return NextResponse.json({ error: "This referral code is invalid, already used for this phone number, or belongs to you." }, { status: 400 });
+      referrerAccountId = referral.referrer_account_id;
+    }
     const amount = subtotal - discountPaise;
     if (!Number.isSafeInteger(amount) || amount < 100) return NextResponse.json({ error: "Order total must be at least ₹1." }, { status: 400 });
 
@@ -85,6 +94,7 @@ export async function POST(request: Request) {
       customer_name: customerName, phone, email: email || null, address: address || null,
       customer_note: note || null, items: orderItems, subtotal_paise: subtotal,
       coupon_code: appliedCoupon, discount_paise: discountPaise,
+      referral_code: referralCode || null, referrer_account_id: referrerAccountId,
       status: "new", payment_status: "pending", razorpay_order_id: razorpayOrder.id
     }).select("id,order_number").single();
 
@@ -102,7 +112,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       orderId: savedOrder.id, orderNumber: savedOrder.order_number,
-      razorpayOrderId: razorpayOrder.id, amount, subtotal, discountPaise, couponCode: appliedCoupon, currency: "INR", keyId
+      razorpayOrderId: razorpayOrder.id, amount, subtotal, discountPaise, couponCode: appliedCoupon, referralCode: referralCode || null, currency: "INR", keyId
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to create checkout.";
