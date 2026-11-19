@@ -28,7 +28,7 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient();
     const { data: order, error } = await admin.from("store_orders")
-      .select("id,order_number,subtotal_paise,razorpay_order_id,payment_status")
+      .select("id,order_number,subtotal_paise,discount_paise,razorpay_order_id,payment_status")
       .eq("id", orderId).maybeSingle();
     if (error || !order || order.razorpay_order_id !== razorpayOrderId) {
       return NextResponse.json({ error: "Order could not be verified." }, { status: 404 });
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
       cache: "no-store"
     });
     const payment = await paymentResponse.json();
-    if (!paymentResponse.ok || payment.order_id !== razorpayOrderId || payment.amount !== order.subtotal_paise ||
+    if (!paymentResponse.ok || payment.order_id !== razorpayOrderId || payment.amount !== (order.subtotal_paise - Number((order as any).discount_paise ?? 0)) ||
         payment.currency !== "INR" || payment.status !== "captured") {
       return NextResponse.json({ error: "Payment is not captured yet. Please wait and refresh your order status." }, { status: 409 });
     }
