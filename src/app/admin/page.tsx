@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, BadgeCheck, Box, Camera, Check, ChevronDown, CirclePlus, ClipboardList, ImagePlus, LayoutDashboard, LogOut, Package, Pencil, Plus, RefreshCw, Search, Settings2, ShieldCheck, ShoppingBag, Sparkles, Trash2, X } from "lucide-react";
 import "./admin.css";
 
+type LoyaltyAccount = {id:string;phone:string;customer_name:string;email:string|null;points_balance:number;lifetime_points:number;tier:string;updated_at:string;store_loyalty_ledger:{id:string;points:number;event_type:string;description:string;created_at:string}[]};
 type Promo = { id:string; code:string; discount_type:"percent"|"fixed"; discount_value:number; min_order_paise:number; max_discount_paise:number|null; usage_limit:number|null; usage_count:number; starts_at:string|null; ends_at:string|null; is_active:boolean };
 type Category = { id: string; name: string; slug: string; is_active: boolean };
 type StoreOrder = { id:string; order_number:number; customer_name:string; phone:string; email:string|null; address:string|null; customer_note:string|null; items:any[]; subtotal_paise:number; status:"new"|"confirmed"|"processing"|"shipped"|"delivered"|"cancelled"; payment_status:string; admin_note:string|null; created_at:string; coupon_code?:string|null; discount_paise?:number };
@@ -40,9 +41,11 @@ export default function AdminPage() {
   const [inventoryHistory, setInventoryHistory] = useState<any[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [promotions, setPromotions] = useState<Promo[]>([]);
+  const [loyaltyAccounts, setLoyaltyAccounts] = useState<LoyaltyAccount[]>([]);
+  const [loyaltySearch, setLoyaltySearch] = useState("");
   const [promoEditing, setPromoEditing] = useState<string | null>(null);
   const [promoForm, setPromoForm] = useState({code:"",discount_type:"percent" as "percent"|"fixed",discount_value:"10",min_order:"0",max_discount:"",usage_limit:"",starts_at:"",ends_at:"",is_active:true});
-  const [tab, setTab] = useState<"overview" | "products" | "categories" | "orders" | "inventory" | "customisations" | "customers" | "analytics" | "promotions">("overview");
+  const [tab, setTab] = useState<"overview" | "products" | "categories" | "orders" | "inventory" | "customisations" | "customers" | "analytics" | "promotions" | "loyalty">("overview");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState<string | null>(null);
@@ -57,18 +60,20 @@ export default function AdminPage() {
   const [customerSearch, setCustomerSearch] = useState("");
 
   const loadData = useCallback(async () => {
-    const [{ data: categoryRows }, { data: productRows }, { data: orderRows }, { data: historyRows }, { data: promoRows }] = await Promise.all([
+    const [{ data: categoryRows }, { data: productRows }, { data: orderRows }, { data: historyRows }, { data: promoRows }, { data: loyaltyRows }] = await Promise.all([
       supabase.from("product_categories").select("id,name,slug,is_active").order("sort_order"),
       supabase.from("products").select("*,product_categories(name),product_images(id,image_url,is_primary,sort_order)").order("created_at", { ascending: false }),
       supabase.from("store_orders").select("*").order("created_at", { ascending: false }).limit(100),
       supabase.from("store_inventory_logs").select("id,product_name,adjustment,previous_stock,new_stock,reason,event_type,order_id,created_at").order("created_at", { ascending: false }).limit(100),
-      supabase.from("promo_codes").select("*").order("created_at",{ascending:false})
+      supabase.from("promo_codes").select("*").order("created_at",{ascending:false}),
+      supabase.from("store_loyalty_accounts").select("*,store_loyalty_ledger(id,points,event_type,description,created_at)").order("points_balance",{ascending:false})
     ]);
     setCategories((categoryRows ?? []) as Category[]);
     setProducts((productRows ?? []) as Product[]);
     setOrders((orderRows ?? []) as StoreOrder[]);
     setInventoryHistory(historyRows ?? []);
     setPromotions((promoRows ?? []) as Promo[]);
+    setLoyaltyAccounts((loyaltyRows ?? []) as LoyaltyAccount[]);
   }, [supabase]);
 
   const verifySession = useCallback(async () => {
@@ -288,6 +293,7 @@ export default function AdminPage() {
       <button className={tab==="customers"?"selected":""} onClick={()=>setTab("customers")}><ShoppingBag size={17}/> Customers <span>{customerProfiles.length}</span></button>
       <button className={tab==="analytics"?"selected":""} onClick={()=>setTab("analytics")}><LayoutDashboard size={17}/> Sales analytics</button>
       <button className={tab==="promotions"?"selected":""} onClick={()=>setTab("promotions")}><Sparkles size={17}/> Promotions <span>{promotions.filter(p=>p.is_active).length}</span></button>
+      <button className={tab==="loyalty"?"selected":""} onClick={()=>setTab("loyalty")}><BadgeCheck size={17}/> Loyalty <span>{loyaltyAccounts.length}</span></button>
       <div className="admin-side-bottom"><div className="admin-user"><div className="admin-avatar">{userEmail.slice(0,1).toUpperCase()}</div><div><strong>Store owner</strong><small>{userEmail}</small></div></div><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </aside>
     <section className="admin-main">
@@ -325,6 +331,12 @@ export default function AdminPage() {
         </>}
         {tab==="customisations"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">PERSONALISED JEWELLERY</div><h1>Custom requests</h1><p>Review customer colour and design preferences before confirming each order.</p></div><button className="admin-secondary" onClick={()=>void loadData()}><RefreshCw size={14}/> Refresh</button></div>
           {customOrders.length===0?<div className="admin-panel admin-empty"><div className="admin-empty-icon"><Sparkles size={24}/></div><h3>No custom requests yet.</h3><p>When customers submit a colour or design preference through a product page, it will appear here.</p></div>:<div className="admin-custom-request-list">{customOrders.map(order=><article className="admin-panel admin-custom-request" key={order.id}><div className="admin-custom-request-head"><div><div className="admin-eyebrow">ORDER #{order.order_number} · {new Date(order.created_at).toLocaleString("en-IN")}</div><h2>{order.customer_name}</h2><p>{order.phone}{order.email?" · "+order.email:""}</p></div><span className={"admin-status "+(order.status==="new"?"draft":"live")}>{order.status}</span></div><div className="admin-custom-request-products">{(order.items??[]).map((item:any,index:number)=><span key={index}>{item.name} × {item.quantity}</span>)}</div><div className="admin-custom-request-note"><span>REQUESTED PERSONALISATION</span><p>{customRequestText(order.customer_note)||order.customer_note}</p></div>{order.address&&<p className="admin-order-detail"><b>Delivery address:</b> {order.address}</p>}<div className="admin-order-controls"><label>Request / order progress<select value={order.status} onChange={e=>void updateOrderStatus(order,e.target.value as StoreOrder["status"])}><option value="new">New — review request</option><option value="confirmed">Confirmed — options agreed</option><option value="processing">Processing — making piece</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></label><span className="admin-status draft">Payment: {order.payment_status}</span></div></article>)}</div>}
+        </>}
+        {tab==="loyalty"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">KURINJI REWARDS</div><h1>Loyalty & rewards</h1><p>Reward customers automatically when their payment is confirmed.</p></div><button className="admin-secondary" onClick={()=>void loadData()}><RefreshCw size={14}/> Refresh</button></div>
+          <div className="admin-stat-grid"><article><span><BadgeCheck size={17}/> MEMBERS</span><strong>{loyaltyAccounts.length}</strong><small>Customers with earned rewards</small></article><article><span><Sparkles size={17}/> POINTS ISSUED</span><strong>{loyaltyAccounts.reduce((s,a)=>s+a.lifetime_points,0).toLocaleString("en-IN")}</strong><small>Lifetime points earned</small></article><article><span><ShoppingBag size={17}/> AVAILABLE POINTS</span><strong>{loyaltyAccounts.reduce((s,a)=>s+a.points_balance,0).toLocaleString("en-IN")}</strong><small>Current customer balances</small></article><article><span><BadgeCheck size={17}/> GOLD & ABOVE</span><strong>{loyaltyAccounts.filter(a=>a.tier==="gold"||a.tier==="platinum").length}</strong><small>Higher-tier members</small></article></div>
+          <div className="admin-panel"><div className="admin-panel-head"><div><div className="admin-eyebrow">MEMBER DIRECTORY</div><h2>Customer rewards</h2></div><div className="admin-search"><Search size={15}/><input value={loyaltySearch} onChange={e=>setLoyaltySearch(e.target.value)} placeholder="Search name or phone"/></div></div>
+            {loyaltyAccounts.filter(a=>(a.customer_name+" "+a.phone+" "+(a.email??"")).toLowerCase().includes(loyaltySearch.trim().toLowerCase())).length===0?<div className="admin-empty"><h3>No loyalty members yet</h3><p>Points are added after a customer's payment is successfully confirmed.</p></div>:<div className="admin-loyalty-list">{loyaltyAccounts.filter(a=>(a.customer_name+" "+a.phone+" "+(a.email??"")).toLowerCase().includes(loyaltySearch.trim().toLowerCase())).map(account=><article className="admin-loyalty-card" key={account.id}><div className="admin-loyalty-head"><div><div className="admin-eyebrow">LOYALTY MEMBER · {account.tier.toUpperCase()}</div><h3>{account.customer_name}</h3><p>{account.phone}{account.email?" · "+account.email:""}</p></div><strong>{account.points_balance.toLocaleString("en-IN")}<small>AVAILABLE POINTS</small></strong></div><div className="admin-customer-metrics"><span><b>{account.lifetime_points.toLocaleString("en-IN")}</b> lifetime points</span><span>Member since <b>{new Date(account.updated_at).toLocaleDateString("en-IN")}</b></span></div><div className="admin-loyalty-actions"><button className="admin-secondary small" onClick={async()=>{const raw=window.prompt("Enter points to add (positive) or deduct (negative):");if(raw===null)return;const points=Number(raw);if(!Number.isInteger(points)||points===0){setNotice("Enter a non-zero whole number of points.");return;}const reason=window.prompt("Reason for this adjustment:");if(!reason||reason.trim().length<3)return;const {error}=await supabase.rpc("adjust_store_loyalty_points",{p_account_id:account.id,p_points:points,p_reason:reason.trim()});if(error)setNotice(error.message);else{setNotice("Loyalty points updated.");await loadData();}}}>Adjust points</button><details className="admin-customer-history"><summary>Points history ({account.store_loyalty_ledger?.length??0})</summary><div>{(account.store_loyalty_ledger??[]).map(entry=><div key={entry.id}><span><b>{entry.points>0?"+":""}{entry.points} points</b> · {entry.description}</span><small>{new Date(entry.created_at).toLocaleString("en-IN")}</small></div>)}</div></details></div></article>)}</div>}
+          </div><p className="admin-analytics-footnote">Earn rate: 1 point for every ₹100 paid after discounts. Bronze: 0–499 lifetime points · Silver: 500+ · Gold: 1,500+ · Platinum: 3,000+. Points are not yet redeemable at checkout.</p>
         </>}
         {tab==="promotions"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">CAMPAIGNS & DISCOUNTS</div><h1>Marketing & promotions</h1><p>Create coupon codes and manage offer windows for your customers.</p></div><button className="admin-secondary" onClick={()=>void loadData()}><RefreshCw size={14}/> Refresh</button></div>
           <div className="admin-stat-grid"><article><span><Sparkles size={17}/> TOTAL CAMPAIGNS</span><strong>{promotions.length}</strong><small>All saved promotion codes</small></article><article><span><BadgeCheck size={17}/> ACTIVE CAMPAIGNS</span><strong>{promotions.filter(p=>p.is_active).length}</strong><small>Enabled for checkout</small></article><article><span><Package size={17}/> CHECKOUT USES</span><strong>{promotions.reduce((sum,p)=>sum+p.usage_count,0)}</strong><small>Codes reserved at checkout</small></article><article><span><ShoppingBag size={17}/> USAGE LIMITS</span><strong>{promotions.filter(p=>p.usage_limit!==null).length}</strong><small>Campaigns with a use cap</small></article></div>
