@@ -1,0 +1,72 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { ArrowLeft, BadgeCheck, Gift, LogOut, Package, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+
+type Order = {id:string;order_number:number;customer_name:string;items:any[];subtotal_paise:number;discount_paise:number|null;loyalty_discount_paise:number|null;loyalty_points_redeemed:number|null;coupon_code:string|null;status:string;payment_status:string;created_at:string};
+type AccountData = {profile:{name:string;phone:string};orders:Order[];loyalty:any|null};
+const money=(paise:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(paise/100);
+const stages=["confirmed","processing","shipped","delivered"];
+const statusLabel=(status:string)=>({new:"Received",confirmed:"Confirmed",processing:"Preparing",shipped:"Shipped",delivered:"Delivered",cancelled:"Cancelled"} as Record<string,string>)[status]??status;
+const statusTone=(status:string)=>status==="delivered"?"done":status==="cancelled"?"cancel":status==="shipped"?"ship":"active";
+
+export default function AccountPage(){
+ const supabase=useMemo(()=>createClient(),[]);
+ const [phone,setPhone]=useState("");
+ const [otp,setOtp]=useState("");
+ const [otpSent,setOtpSent]=useState(false);
+ const [loading,setLoading]=useState(true);
+ const [busy,setBusy]=useState(false);
+ const [error,setError]=useState("");
+ const [notice,setNotice]=useState("");
+ const [data,setData]=useState<AccountData|null>(null);
+ const loadAccount=useCallback(async()=>{
+  const {data:{user}}=await supabase.auth.getUser();
+  if(!user?.phone){setData(null);setLoading(false);return;}
+  const response=await fetch("/api/account",{cache:"no-store"});
+  const result=await response.json();
+  if(!response.ok){setError(result.error||"Unable to load account.");setData(null);}
+  else setData(result);
+  setLoading(false);
+ },[supabase]);
+ useEffect(()=>{void loadAccount();},[loadAccount]);
+ async function sendOtp(event:React.FormEvent){
+  event.preventDefault();setBusy(true);setError("");setNotice("");
+  const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
+  if(!/^\d{10}$/.test(digits)){setError("Enter a valid 10-digit Indian mobile number.");setBusy(false);return;}
+  const {error}=await supabase.auth.signInWithOtp({phone:"+91"+digits});
+  if(error)setError(error.message);else{setOtpSent(true);setNotice("A verification code has been sent to your mobile.");}
+  setBusy(false);
+ }
+ async function verifyOtp(event:React.FormEvent){
+  event.preventDefault();setBusy(true);setError("");setNotice("");
+  const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
+  const {error}=await supabase.auth.verifyOtp({phone:"+91"+digits,token:otp.trim(),type:"sms"});
+  if(error)setError(error.message);else{setOtp("");setOtpSent(false);setLoading(true);await loadAccount();}
+  setBusy(false);
+ }
+ async function signOut(){await supabase.auth.signOut();setData(null);setPhone("");setOtp("");setOtpSent(false);}
+ if(loading)return <main className="container section kc-account"><p>Loading your account…</p></main>;
+ return <main className="container kc-account">
+  <header className="kc-account-header"><Link href="/shop" className="back-link"><ArrowLeft size={15}/> BACK TO SHOP</Link><Link href="/" className="brand">KURINJI<small>CREATIONS</small></Link><span className="kc-account-secure"><ShieldCheck size={14}/> SECURE</span></header>
+  {!data?<section className="kc-account-login">
+   <div className="kc-account-mark"><ShieldCheck size={25}/></div><div className="kicker">YOUR KURINJI ACCOUNT</div><h1 className="section-title">A little space, just for you.</h1>
+   <p>Verify your mobile number to view your orders, delivery progress and loyalty rewards.</p>
+   {!otpSent?<form onSubmit={sendOtp}><label>Mobile number<input type="tel" inputMode="numeric" autoComplete="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="10-digit mobile number" maxLength={14}/></label><button className="primary-button" disabled={busy}>{busy?"SENDING…":"SEND VERIFICATION CODE"}</button></form>
+   :<form onSubmit={verifyOtp}><label>Verification code<input type="text" inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={e=>setOtp(e.target.value)} placeholder="Enter the SMS code" maxLength={8}/></label><button className="primary-button" disabled={busy||otp.trim().length<4}>{busy?"VERIFYING…":"VERIFY & VIEW ACCOUNT"}</button><button type="button" className="kc-account-text-button" onClick={()=>{setOtpSent(false);setOtp("");}}>Change mobile number</button></form>}
+   {error&&<p className="kc-account-error" role="alert">{error}</p>}{notice&&<p className="kc-account-notice" role="status">{notice}</p>}
+  </section>:<>
+   <div className="kc-account-welcome"><div><div className="kicker">WELCOME BACK</div><h1 className="section-title">{data.profile.name||"Your account"}</h1><p>{data.profile.phone}</p></div><button onClick={signOut} className="kc-account-signout"><LogOut size={15}/> SIGN OUT</button></div>
+   {data.loyalty&&<section className="kc-loyalty-panel"><div className="kc-loyalty-top"><div><div className="kicker">KURINJI REWARDS · {data.loyalty.tier.toUpperCase()}</div><h2>{Number(data.loyalty.points_balance).toLocaleString("en-IN")} <small>POINTS AVAILABLE</small></h2><p>{Number(data.loyalty.lifetime_points).toLocaleString("en-IN")} lifetime points</p></div><div className="kc-loyalty-icon"><Sparkles size={24}/></div></div><div className="kc-loyalty-referral"><div><small>YOUR FRIEND REFERRAL CODE</small><strong>{data.loyalty.referral_code}</strong></div><button onClick={()=>{void navigator.clipboard.writeText(data.loyalty.referral_code);setNotice("Referral code copied.");}}>COPY CODE</button></div><p className="kc-loyalty-hint">Earn 1 point for every ₹100 paid. Redeem 10 points for ₹1 off your next order.</p></section>}
+   <section className="kc-account-orders"><div className="section-head"><div><div className="kicker">YOUR PURCHASES</div><h2 className="section-title">Order history</h2></div><button className="kc-account-refresh" onClick={()=>{setLoading(true);void loadAccount();}}><RefreshCw size={14}/> REFRESH</button></div>
+    {!data.orders.length?<div className="kc-account-empty"><Package size={27}/><h3>Your story starts here.</h3><p>Your orders will appear here after checkout.</p><Link href="/shop" className="primary-button">EXPLORE JEWELLERY</Link></div>:
+    <div className="kc-order-list">{data.orders.map(order=>{const total=order.subtotal_paise-(order.discount_paise||0)-(order.loyalty_discount_paise||0);const current=stages.indexOf(order.status);return <article className="kc-order-card" key={order.id}><div className="kc-order-head"><div><small>ORDER #{order.order_number}</small><strong>{new Date(order.created_at).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</strong></div><span className={"kc-order-status "+statusTone(order.status)}>{statusLabel(order.status)}</span></div><div className="kc-order-items">{(order.items||[]).map((item:any,i:number)=><span key={i}>{item.name} <b>× {item.quantity}</b></span>)}</div><div className="kc-order-foot"><span>{order.payment_status==="paid"?"PAID":"PAYMENT "+order.payment_status.toUpperCase()}</span><strong>{money(total)}</strong></div>{order.status!=="cancelled"&&<div className="kc-order-progress">{stages.map((stage,i)=><div className={i<=current?"reached":""} key={stage}><i/><span>{statusLabel(stage)}</span></div>)}</div>}</article>})}</div>}
+   </section>
+   {data.loyalty&&<section className="kc-account-ledger"><div className="kicker">POINTS ACTIVITY</div><h2 className="section-title">Rewards history</h2>{data.loyalty.ledger.length?<div className="kc-ledger-list">{data.loyalty.ledger.map((entry:any)=><div key={entry.id}><span><strong>{entry.description}</strong><small>{new Date(entry.created_at).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</small></span><b className={entry.points>0?"positive":"negative"}>{entry.points>0?"+":""}{entry.points}</b></div>)}</div>:<p className="kc-account-muted">Your points activity will appear here.</p>}</section>}
+   {notice&&<p className="kc-account-notice">{notice}</p>}
+  </>}
+  <footer className="kc-account-footer">HANDCRAFTED WITH CARE · KURINJI CREATIONS</footer>
+ </main>;
+}
