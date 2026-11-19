@@ -193,7 +193,7 @@ export default function AdminPage() {
   const recentOrders = [...orders].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,5);
   const stockAlerts = products.filter(p=>p.stock_quantity<=5).sort((a,b)=>a.stock_quantity-b.stock_quantity).slice(0,5);
   const customOrders = orders.filter(order => /(preferred colou?r|custom design|customis|customiz)/i.test(order.customer_note ?? ""));
-  const customRequestText = (note: string | null) => (note ?? "").split(/\\r?\\n/).filter(line => /(preferred colou?r|custom design|customis|customiz)/i.test(line)).join(" · ");
+  const customRequestText = (note: string | null) => (note ?? "").split(/\r?\n/).filter(line => /(preferred colou?r|custom design|customis|customiz)/i.test(line)).join(" · ");
   const filteredOrders = orders.filter(order => {
     const query = orderSearch.trim().toLowerCase();
     const matchesSearch = !query || [String(order.order_number), order.customer_name, order.phone, order.email ?? ""].some(value => value.toLowerCase().includes(query));
