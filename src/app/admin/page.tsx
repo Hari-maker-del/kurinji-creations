@@ -225,7 +225,7 @@ export default function AdminPage() {
   const lowStock = products.filter(p => p.stock_quantity <= 5).length;
   const outOfStock = products.filter(p => p.stock_quantity <= 0).length;
   const paidOrders = orders.filter(o => o.payment_status === "paid");
-  const paidRevenue = paidOrders.reduce((sum, order) => sum + (Number(order.subtotal_paise) || 0) - (Number(order.discount_paise) || 0) - (Number(order.discount_paise) || 0), 0);
+  const paidRevenue = paidOrders.reduce((sum, order) => sum + (Number(order.subtotal_paise) || 0) - (Number(order.discount_paise) || 0), 0);
   const recentOrders = [...orders].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,5);
   const stockAlerts = products.filter(p=>p.stock_quantity<=5).sort((a,b)=>a.stock_quantity-b.stock_quantity).slice(0,5);
   const customerProfiles = Object.values(orders.reduce((groups, order) => {
@@ -246,8 +246,8 @@ export default function AdminPage() {
   const dayKeys = Array.from({length:7},(_,index)=>{const d=new Date(analyticsNow);d.setHours(0,0,0,0);d.setDate(d.getDate()-(6-index));return d;});
   const dailySales = dayKeys.map(day=>{const key=day.toDateString();const dayOrders=paidOrderHistory.filter(order=>new Date(order.created_at).toDateString()===key);return {label:day.toLocaleDateString("en-IN",{weekday:"short"}),revenue:dayOrders.reduce((sum,order)=>sum+(Number(order.subtotal_paise)||0)-(Number(order.discount_paise)||0),0),count:dayOrders.length};});
   const monthKeys = Array.from({length:6},(_,index)=>{const d=new Date(analyticsNow.getFullYear(),analyticsNow.getMonth()-(5-index),1);return d;});
-  const monthlySales = monthKeys.map(month=>{const monthOrders=paidOrderHistory.filter(order=>{const d=new Date(order.created_at);return d.getFullYear()===month.getFullYear()&&d.getMonth()===month.getMonth();});return {label:month.toLocaleDateString("en-IN",{month:"short"}),revenue:monthOrders.reduce((sum,order)=>sum+(Number(order.subtotal_paise)||0),0),count:monthOrders.length};});
-  const paidRevenueAll = paidOrderHistory.reduce((sum,order)=>sum+(Number(order.subtotal_paise)||0),0);
+  const monthlySales = monthKeys.map(month=>{const monthOrders=paidOrderHistory.filter(order=>{const d=new Date(order.created_at);return d.getFullYear()===month.getFullYear()&&d.getMonth()===month.getMonth();});return {label:month.toLocaleDateString("en-IN",{month:"short"}),revenue:monthOrders.reduce((sum,order)=>sum+(Number(order.subtotal_paise)||0)-(Number(order.discount_paise)||0),0),count:monthOrders.length};});
+  const paidRevenueAll = paidOrderHistory.reduce((sum,order)=>sum+(Number(order.subtotal_paise)||0)-(Number(order.discount_paise)||0),0);
   const paidItems = paidOrderHistory.flatMap(order=>(Array.isArray(order.items)?order.items:[]).map((item:any)=>({name:String(item.name??item.product_name??"Jewellery item"),quantity:Math.max(0,Number(item.quantity)||0),revenue:(Number(item.price_paise??item.unit_price_paise??0)||0)*Math.max(0,Number(item.quantity)||0)})));
   const bestSellers = Object.values(paidItems.reduce((groups,item)=>{const key=item.name.toLowerCase();const current=groups[key]??{name:item.name,quantity:0,revenue:0};current.quantity+=item.quantity;current.revenue+=item.revenue;groups[key]=current;return groups;},{} as Record<string,{name:string;quantity:number;revenue:number}>)).sort((a,b)=>b.quantity-a.quantity).slice(0,5);
   const maxDailyRevenue = Math.max(1,...dailySales.map(day=>day.revenue));
