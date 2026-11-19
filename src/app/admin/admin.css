@@ -218,3 +218,16 @@
 .admin-promo-card small{font-size:9px;color:#93877a;line-height:1.6}
 .admin-promo-card .admin-row-actions{flex-wrap:wrap;justify-content:flex-end}
 @media(max-width:650px){.admin-promo-form{padding:16px}.admin-promo-card{align-items:flex-start;flex-direction:column}.admin-promo-card .admin-row-actions{justify-content:flex-start;width:100%}}
+
+
+/* Customer loyalty and rewards */
+.admin-loyalty-list{display:grid;gap:13px}
+.admin-loyalty-card{border:1px solid #e9e2d9;background:#fffefa;padding:21px 23px}
+.admin-loyalty-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.admin-loyalty-head h3{font:24px 'Playfair Display',serif;font-weight:400;margin:7px 0 5px}
+.admin-loyalty-head p{font-size:11px;color:#81766a;margin:0;line-height:1.6}
+.admin-loyalty-head>strong{font:24px 'Playfair Display',serif;color:#806044;text-align:right;white-space:nowrap}
+.admin-loyalty-head>strong small{display:block;font:8px 'DM Sans',sans-serif;letter-spacing:.15em;color:#93877a;margin-top:5px}
+.admin-loyalty-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.admin-loyalty-actions .admin-customer-history{flex:1}
+@media(max-width:650px){.admin-loyalty-card{padding:16px}.admin-loyalty-head h3{font-size:21px}.admin-loyalty-head>strong{font-size:20px}}
