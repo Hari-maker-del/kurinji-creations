@@ -60,7 +60,7 @@ export default function ProductPage(){
  const related=useMemo(()=>catalogue.filter(p=>p.id!==product.id).slice(0,3),[product.id]);
  return <main className="detail-page">
   <div className="promo">A LITTLE SOMETHING LOVELY · KURINJI CREATIONS</div>
-  <header className="container detail-header"><Link href="/shop" className="back-link"><ArrowLeft size={17}/> <span>BACK TO SHOP</span></Link><Link href="/shop" className="brand">KURINJI<small>CREATIONS</small></Link><span className="detail-header-note">THE LITTLE DETAILS</span></header>
+  <header className="container detail-header"><Link href="/shop" className="back-link"><ArrowLeft size={17}/> <span>BACK TO SHOP</span></Link><Link href="/shop" className="brand kc-detail-logo" aria-label="Kurinji Creations"><img src="/brand/kurinji-header-logo.svg" alt="Kurinji Creations"/></Link><span className="detail-header-note">THE LITTLE DETAILS</span></header>
   <div className="container detail-layout">
    <section className="detail-gallery">
     <div className="detail-main-photo"><img src={product.images[photo]||catalogue[0].images[0]} alt={product.name+" jewellery view"}/><span className="detail-photo-tag">{product.tag||"CURATED FOR YOU"}</span></div>
@@ -98,7 +98,7 @@ export default function ProductPage(){
    </section>
   </div>
   <section className="container related-section"><div className="kicker">MORE TO LOVE</div><h2 className="section-title">You may also like</h2><div className="related-grid">{related.map(p=><Link href={"/products/"+(p.slug||p.id)} key={p.id} className="related-card"><img src={p.images[0]} alt={p.name}/><span>{p.name}</span><strong>{money(p.price)}</strong></Link>)}</div></section>
-  <footer className="container footer detail-footer"><div style={{textAlign:"center"}}><div className="brand">KURINJI<small>CREATIONS</small></div><p className="detail-footer-note">ELEGANCE IN EVERY DETAIL</p><Link href="/shop" className="text-link">CONTINUE SHOPPING</Link></div></footer>
+  <footer className="container footer detail-footer"><div style={{textAlign:"center"}}><div className="brand kc-detail-footer-logo"><img src="/brand/kurinji-header-logo.svg" alt="Kurinji Creations"/></div><p className="detail-footer-note">ELEGANCE IN EVERY DETAIL</p><Link href="/shop" className="text-link">CONTINUE SHOPPING</Link></div></footer>
   <a href={"https://wa.me/?text="+encodeURIComponent("Hello Kurinji Creations! I have a question about your jewellery.")} target="_blank" rel="noreferrer" className="detail-whatsapp" aria-label="Chat on WhatsApp"><MessageCircle size={21}/></a>
  </main>;
 }
