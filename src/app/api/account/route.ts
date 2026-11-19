@@ -10,19 +10,21 @@ export async function GET() {
     const { data: { user }, error: authError } = await auth.auth.getUser();
     if (authError || !user?.phone) return NextResponse.json({ error: "Verify your phone number to view your account." }, { status: 401 });
 
-    const phone = user.phone.replace(/[^0-9]/g, "");
-    if (phone.length < 8) return NextResponse.json({ error: "Your verified phone number is invalid." }, { status: 400 });
+    const digits = user.phone.replace(/[^0-9]/g, "");
+    const phone = digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits.length === 11 && digits.startsWith("0") ? digits.slice(1) : digits;
+    if (phone.length !== 10) return NextResponse.json({ error: "Your verified phone number is invalid." }, { status: 400 });
+    const phoneVariants = [phone, "91" + phone, "0" + phone];
 
     const admin = createAdminClient();
     const { data: orders, error: orderError } = await admin.from("store_orders")
-      .select("id,order_number,customer_name,phone,items,subtotal_paise,discount_paise,loyalty_discount_paise,loyalty_points_redeemed,coupon_code,status,payment_status,created_at,updated_at")
-      .order("created_at", { ascending: false }).limit(100);
+      .select("id,order_number,customer_name,phone,items,subtotal_paise,discount_paise,loyalty_discount_paise,loyalty_points_redeemed,coupon_code,status,payment_status,created_at")
+      .in("phone", phoneVariants).order("created_at", { ascending: false }).limit(100);
     if (orderError) return NextResponse.json({ error: "Unable to load your orders." }, { status: 500 });
 
-    const mine = (orders ?? []).filter(order => (order.phone ?? "").replace(/[^0-9]/g, "") === phone);
+    const mine = (orders ?? []).filter(order => phoneVariants.includes((order.phone ?? "").replace(/[^0-9]/g, "")));
     const { data: account, error: loyaltyError } = await admin.from("store_loyalty_accounts")
       .select("id,phone,customer_name,email,points_balance,lifetime_points,tier,referral_code,created_at")
-      .eq("phone", phone).maybeSingle();
+      .in("phone", phoneVariants).order("created_at", { ascending: false }).limit(1).maybeSingle();
     if (loyaltyError) return NextResponse.json({ error: "Unable to load your rewards." }, { status: 500 });
 
     let ledger: any[] = [];
