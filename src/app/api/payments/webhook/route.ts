@@ -34,11 +34,11 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient();
     const { data: storeOrder, error: orderError } = await admin.from("store_orders")
-      .select("id,subtotal_paise,payment_status")
+      .select("id,subtotal_paise,discount_paise,payment_status")
       .eq("razorpay_order_id", razorpayOrderId).maybeSingle();
     if (orderError) return NextResponse.json({ error: "Could not retrieve order." }, { status: 500 });
     if (!storeOrder) return NextResponse.json({ received: true });
-    if (payment.amount !== storeOrder.subtotal_paise) {
+    if (payment.amount !== (storeOrder.subtotal_paise - Number(storeOrder.discount_paise ?? 0))) {
       return NextResponse.json({ error: "Payment amount mismatch." }, { status: 400 });
     }
 
