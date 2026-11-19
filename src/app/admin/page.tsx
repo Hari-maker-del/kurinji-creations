@@ -35,7 +35,8 @@ export default function AdminPage() {
   const [busy, setBusy] = useState(false);
   const [authorized, setAuthorized] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<StoreOrder[]>([]);\n  const [inventoryHistory, setInventoryHistory] = useState<any[]>([]);
+  const [orders, setOrders] = useState<StoreOrder[]>([]);
+  const [inventoryHistory, setInventoryHistory] = useState<any[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tab, setTab] = useState<"overview" | "products" | "categories" | "orders" | "inventory">("overview");
   const [search, setSearch] = useState("");
@@ -44,7 +45,8 @@ export default function AdminPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [images, setImages] = useState<File[]>([]);
   const [notice, setNotice] = useState("");
-  const [categoryName, setCategoryName] = useState("");\n  const [inventoryFilter, setInventoryFilter] = useState<"all" | "in" | "low" | "out">("all");
+  const [categoryName, setCategoryName] = useState("");
+  const [inventoryFilter, setInventoryFilter] = useState<"all" | "in" | "low" | "out">("all");
 
   const loadData = useCallback(async () => {
     const [{ data: categoryRows }, { data: productRows }, { data: orderRows }, { data: historyRows }] = await Promise.all([
@@ -54,7 +56,8 @@ export default function AdminPage() {
     ]);
     setCategories((categoryRows ?? []) as Category[]);
     setProducts((productRows ?? []) as Product[]);
-    setOrders((orderRows ?? []) as StoreOrder[]);\n    setInventoryHistory(historyRows ?? []);
+    setOrders((orderRows ?? []) as StoreOrder[]);
+    setInventoryHistory(historyRows ?? []);
   }, [supabase]);
 
   const verifySession = useCallback(async () => {
@@ -196,7 +199,8 @@ export default function AdminPage() {
       <button className={tab==="overview"?"selected":""} onClick={()=>setTab("overview")}><LayoutDashboard size={17}/> Overview</button>
       <button className={tab==="products"?"selected":""} onClick={()=>setTab("products")}><ShoppingBag size={17}/> Products <span>{products.length}</span></button>
       <button className={tab==="categories"?"selected":""} onClick={()=>setTab("categories")}><ClipboardList size={17}/> Categories</button>
-      <button className={tab==="orders"?"selected":""} onClick={()=>setTab("orders")}><Package size={17}/> Orders <span>{orders.filter(o=>o.status==="new").length}</span></button>\n      <button className={tab==="inventory"?"selected":""} onClick={()=>setTab("inventory")}><Box size={17}/> Inventory</button>
+      <button className={tab==="orders"?"selected":""} onClick={()=>setTab("orders")}><Package size={17}/> Orders <span>{orders.filter(o=>o.status==="new").length}</span></button>
+      <button className={tab==="inventory"?"selected":""} onClick={()=>setTab("inventory")}><Box size={17}/> Inventory</button>
       <div className="admin-side-bottom"><div className="admin-user"><div className="admin-avatar">{userEmail.slice(0,1).toUpperCase()}</div><div><strong>Store owner</strong><small>{userEmail}</small></div></div><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </aside>
     <section className="admin-main">
