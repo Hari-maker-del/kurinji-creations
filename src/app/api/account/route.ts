@@ -13,7 +13,8 @@ export async function GET() {
     const digits = user.phone.replace(/[^0-9]/g, "");
     const phone = digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits.length === 11 && digits.startsWith("0") ? digits.slice(1) : digits;
     if (phone.length !== 10) return NextResponse.json({ error: "Your verified phone number is invalid." }, { status: 400 });
-    const phoneVariants = [phone, "91" + phone, "0" + phone];\n    const normalizePhone = (value: string) => { const d=value.replace(/[^0-9]/g, ""); return d.length>=10 ? d.slice(-10) : d; };
+    const phoneVariants = [phone, "91" + phone, "0" + phone];
+    const normalizePhone = (value: string) => { const d=value.replace(/[^0-9]/g, ""); return d.length>=10 ? d.slice(-10) : d; };
 
     const admin = createAdminClient();
     const { data: orders, error: orderError } = await admin.from("store_orders")
