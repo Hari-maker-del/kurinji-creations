@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
   try {
     const event = JSON.parse(rawBody);
-    if (event.event !== "payment.captured" && event.event !== "order.paid") {
+    if (event.event === "payment.failed") {\n      const failedPayment = event.payload?.payment?.entity;\n      if (failedPayment?.order_id) {\n        const admin = createAdminClient();\n        const { data: failedOrder } = await admin.from("store_orders").select("id,razorpay_order_id").eq("razorpay_order_id", failedPayment.order_id).maybeSingle();\n        if (failedOrder) await admin.rpc("release_store_loyalty_redemption", { p_order_id: failedOrder.id, p_razorpay_order_id: failedOrder.razorpay_order_id });\n      }\n      return NextResponse.json({ received: true });\n    }\n    if (event.event !== "payment.captured" && event.event !== "order.paid") {
       return NextResponse.json({ received: true });
     }
     const payment = event.payload?.payment?.entity;
@@ -34,11 +34,11 @@ export async function POST(request: Request) {
 
     const admin = createAdminClient();
     const { data: storeOrder, error: orderError } = await admin.from("store_orders")
-      .select("id,subtotal_paise,discount_paise,payment_status")
+      .select("id,subtotal_paise,discount_paise,loyalty_discount_paise,payment_status")
       .eq("razorpay_order_id", razorpayOrderId).maybeSingle();
     if (orderError) return NextResponse.json({ error: "Could not retrieve order." }, { status: 500 });
     if (!storeOrder) return NextResponse.json({ received: true });
-    if (payment.amount !== (storeOrder.subtotal_paise - Number(storeOrder.discount_paise ?? 0))) {
+    if (payment.amount !== (storeOrder.subtotal_paise - Number(storeOrder.discount_paise ?? 0) - Number((storeOrder as any).loyalty_discount_paise ?? 0))) {
       return NextResponse.json({ error: "Payment amount mismatch." }, { status: 400 });
     }
 
