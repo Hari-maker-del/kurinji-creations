@@ -1,13 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="260" viewBox="0 0 1000 260"><g transform="translate(130 128) scale(1.05)">
-<g transform="translate(0,0)" stroke-linejoin="round">
-  <path d="M0 24 C-18 8 -23 -13 0 -43 C23 -13 18 8 0 24Z" fill="#8E44AD" stroke="#D4A543" stroke-width="2.4"/>
-  <path d="M0 24 C-18 8 -23 -13 0 -43" fill="none" stroke="#CFA6E4" stroke-width="1.2" opacity=".8"/>
-  <g transform="rotate(60)"><path d="M0 24 C-18 8 -23 -13 0 -43 C23 -13 18 8 0 24Z" fill="#7B2D91" stroke="#D4A543" stroke-width="2.4"/><path d="M0 24 C-18 8 -23 -13 0 -43" fill="none" stroke="#CFA6E4" stroke-width="1.2" opacity=".8"/></g>
-  <g transform="rotate(120)"><path d="M0 24 C-18 8 -23 -13 0 -43 C23 -13 18 8 0 24Z" fill="#914DB0" stroke="#D4A543" stroke-width="2.4"/><path d="M0 24 C-18 8 -23 -13 0 -43" fill="none" stroke="#CFA6E4" stroke-width="1.2" opacity=".8"/></g>
-  <g transform="rotate(180)"><path d="M0 24 C-18 8 -23 -13 0 -43 C23 -13 18 8 0 24Z" fill="#7B2D91" stroke="#D4A543" stroke-width="2.4"/></g>
-  <g transform="rotate(240)"><path d="M0 24 C-18 8 -23 -13 0 -43 C23 -13 18 8 0 24Z" fill="#914DB0" stroke="#D4A543" stroke-width="2.4"/></g>
-  <g transform="rotate(300)"><path d="M0 24 C-18 8 -23 -13 0 -43 C23 -13 18 8 0 24Z" fill="#7B2D91" stroke="#D4A543" stroke-width="2.4"/></g>
-  <circle r="8" fill="#D4A543" stroke="#F9F5EC" stroke-width="1.5"/>
-  <g stroke="#D4A543" stroke-width="2.4" stroke-linecap="round"><path d="M0 -6 L0 -42 M5 -4 L24 -34 M7 1 L39 -8 M-5 -4 L-24 -34 M-7 1 L-39 -8"/></g>
-  <g fill="#F9F5EC" stroke="#D4A543" stroke-width="1.5"><circle cy="-43" r="4"/><circle cx="24" cy="-35" r="4"/><circle cx="39" cy="-9" r="4"/><circle cx="-24" cy="-35" r="4"/><circle cx="-39" cy="-9" r="4"/></g>
-</g></g><path d="M205 40 V220" stroke="#D4A543" stroke-width="2"/><text x="260" y="125" fill="#4B0D4D" font-family="Georgia,serif" font-size="88" letter-spacing="5">KURINJI</text><text x="266" y="183" fill="#6A4A32" font-family="Georgia,serif" font-size="30" letter-spacing="13">CREATIONS</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="260" viewBox="0 0 1000 260" role="img" aria-labelledby="title desc">
+<title id="title">Kurinji Creations</title><desc id="desc">Silver and royal blue lotus intertwined with an infinity symbol on deep navy, with the Kurinji Creations wordmark.</desc>
+<defs><linearGradient id="silver" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset=".48" stop-color="#aebbd0"/><stop offset="1" stop-color="#f7f8ff"/></linearGradient><linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#68a8ff"/><stop offset=".5" stop-color="#073d9c"/><stop offset="1" stop-color="#001a54"/></linearGradient><linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff"/><stop offset=".5" stop-color="#9daac0"/><stop offset="1" stop-color="#fff"/></linearGradient></defs>
+<rect width="1000" height="260" rx="18" fill="#061329"/>
+<g transform="translate(155 115)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path d="M-112 20 C-170 -50 -82 -102 -8 -28 C35 15 53 55 0 84 C-70 123 -171 64 -112 20Z" stroke="url(#blue)" stroke-width="10"/>
+<path d="M112 20 C170 -50 82 -102 8 -28 C-35 15 -53 55 0 84 C70 123 171 64 112 20Z" stroke="url(#silver)" stroke-width="10"/>
+<path d="M-112 20 C-50 -45 -20 -5 0 20 C20 45 50 85 112 20" stroke="url(#blue)" stroke-width="5" opacity=".95"/>
+<path d="M-112 20 C-50 85 -20 45 0 20 C20 -5 50 -45 112 20" stroke="url(#silver)" stroke-width="5" opacity=".95"/>
+</g>
+<g transform="translate(155 83)" stroke="url(#metal)" stroke-width="5" stroke-linejoin="round">
+<path d="M0 52 C-38 20 -40 -20 0 -65 C40 -20 38 20 0 52Z" fill="url(#blue)"/>
+<path d="M-5 48 C-66 16 -75 -17 -57 -48 C-22 -35 -8 5 -5 48Z" fill="#092d70"/>
+<path d="M5 48 C66 16 75 -17 57 -48 C22 -35 8 5 5 48Z" fill="#092d70"/>
+<path d="M-7 49 C-105 24 -113 -7 -91 -35 C-48 -25 -19 11 -7 49Z" fill="none"/>
+<path d="M7 49 C105 24 113 -7 91 -35 C48 -25 19 11 7 49Z" fill="none"/>
+</g>
+<text x="325" y="118" fill="url(#metal)" font-family="Georgia,serif" font-size="76" letter-spacing="5">KURINJI</text>
+<text x="333" y="165" fill="#dce6f7" font-family="Arial,sans-serif" font-size="27" letter-spacing="13">CREATIONS</text>
+<path d="M333 184 H850" stroke="#8297b9" stroke-width="1" opacity=".7"/>
+<text x="333" y="216" fill="#aebdd4" font-family="Arial,sans-serif" font-size="17" letter-spacing="5">HANDCRAFTED JEWELLERY</text>
+</svg>
