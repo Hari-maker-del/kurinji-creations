@@ -1,0 +1,2 @@
+
+.kc-coupon-box{border:1px solid var(--line);padding:14px;margin-top:14px;background:var(--white)}.kc-coupon-box>strong{display:block;font-size:11px;margin-bottom:9px}.kc-coupon-box>div{display:flex;gap:7px}.kc-coupon-box input{min-width:0;flex:1;border:1px solid var(--line);padding:10px;font-size:11px;text-transform:uppercase}.kc-coupon-box button{border:1px solid var(--deep);background:var(--deep);color:#fff;padding:0 14px;font-size:10px}.kc-coupon-box button:disabled{opacity:.55}.kc-coupon-box>small{display:block;margin-top:8px;font-size:10px;color:#60765f}
