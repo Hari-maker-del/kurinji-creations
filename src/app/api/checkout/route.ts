@@ -72,9 +72,6 @@ export async function POST(request: Request) {
       if (referralError || !referral) return NextResponse.json({ error: "This referral code is invalid, already used for this phone number, or belongs to you." }, { status: 400 });
       referrerAccountId = referral.referrer_account_id;
     }
-    const amount = subtotal - discountPaise;
-    if (!Number.isSafeInteger(amount) || amount < 100) return NextResponse.json({ error: "Order total must be at least ₹1." }, { status: 400 });
-
     const requestedPoints = Number(body.redeemPoints ?? 0);
     if (!Number.isInteger(requestedPoints) || requestedPoints < 0 || requestedPoints > 1000000) {
       return NextResponse.json({ error: "Enter a valid number of loyalty points." }, { status: 400 });
