@@ -28,7 +28,9 @@ export async function POST(request: Request) {
     }
 
     const admin = createAdminClient();
-    const productIds = [...new Set(items.map((item) => item.productId))];
+    const quantities = new Map<string, number>();
+    for (const item of items) quantities.set(item.productId, (quantities.get(item.productId) ?? 0) + item.quantity);
+    const productIds = [...quantities.keys()];
     const { data: products, error: productError } = await admin
       .from("products")
       .select("id,name,price_paise,stock_quantity,is_active")
@@ -37,10 +39,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "One or more products are unavailable." }, { status: 400 });
     }
 
-    const orderItems = items.map((item) => {
-      const product = products.find((row) => row.id === item.productId)!;
-      if (!product.is_active || product.stock_quantity < item.quantity) throw new Error(product.name + " is currently unavailable in that quantity.");
-      return { product_id: product.id, name: product.name, quantity: item.quantity, unit_price_paise: product.price_paise };
+    const orderItems = productIds.map((productId) => {
+      const product = products.find((row) => row.id === productId)!;
+      const quantity = quantities.get(productId)!;
+      if (!product.is_active || product.stock_quantity < quantity) {
+        throw new Error(product.name + " has only " + Math.max(0, product.stock_quantity) + " available.");
+      }
+      return { product_id: product.id, name: product.name, quantity, unit_price_paise: product.price_paise };
     });
     const amount = orderItems.reduce((sum, item) => sum + item.unit_price_paise * item.quantity, 0);
     if (!Number.isSafeInteger(amount) || amount < 100) return NextResponse.json({ error: "Order total must be at least ₹1." }, { status: 400 });
