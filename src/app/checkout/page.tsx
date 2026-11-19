@@ -59,6 +59,7 @@ export default function CheckoutPage(){
   if(!products.length){setMessage("Your shopping bag is empty.");return;}
   const unavailable=products.find(p=>(quantities[p.id]||0)>p.stock||p.stock<=0);if(unavailable){setMessage(unavailable.name+" has only "+unavailable.stock+" available. Please update your bag.");return;}
   setBusy(true);setMessage("");
+  let pendingOrder:any=null;
   try{
    const items=products.map(p=>({productId:p.id,quantity:quantities[p.id]||1}));
    const response=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:name,phone,email,address,note,items,couponCode,referralCode,redeemPoints:requestedRedemption})});
