@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BadgeCheck, Gift, LogOut, Package, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Gift, LockKeyhole, LogOut, Package, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Order = {id:string;order_number:number;customer_name:string;items:any[];subtotal_paise:number;discount_paise:number|null;loyalty_discount_paise:number|null;loyalty_points_redeemed:number|null;coupon_code:string|null;status:string;payment_status:string;created_at:string};
