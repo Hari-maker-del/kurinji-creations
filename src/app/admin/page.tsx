@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, BadgeCheck, Box, Camera, Check, ChevronDown, CirclePlus, ClipboardList, ImagePlus, LayoutDashboard, LogOut, Package, Pencil, Plus, RefreshCw, Search, Settings2, ShieldCheck, ShoppingBag, Sparkles, Trash2, X } from "lucide-react";
 import "./admin.css";
 
+type Promo = { id:string; code:string; discount_type:"percent"|"fixed"; discount_value:number; min_order_paise:number; max_discount_paise:number|null; usage_limit:number|null; usage_count:number; starts_at:string|null; ends_at:string|null; is_active:boolean };
 type Category = { id: string; name: string; slug: string; is_active: boolean };
 type StoreOrder = { id:string; order_number:number; customer_name:string; phone:string; email:string|null; address:string|null; customer_note:string|null; items:any[]; subtotal_paise:number; status:"new"|"confirmed"|"processing"|"shipped"|"delivered"|"cancelled"; payment_status:string; admin_note:string|null; created_at:string };
 type Product = {
@@ -38,7 +39,10 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<StoreOrder[]>([]);
   const [inventoryHistory, setInventoryHistory] = useState<any[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tab, setTab] = useState<"overview" | "products" | "categories" | "orders" | "inventory" | "customisations" | "customers" | "analytics">("overview");
+  const [promotions, setPromotions] = useState<Promo[]>([]);
+  const [promoEditing, setPromoEditing] = useState<string | null>(null);
+  const [promoForm, setPromoForm] = useState({code:"",discount_type:"percent" as "percent"|"fixed",discount_value:"10",min_order:"0",max_discount:"",usage_limit:"",starts_at:"",ends_at:"",is_active:true});
+  const [tab, setTab] = useState<"overview" | "products" | "categories" | "orders" | "inventory" | "customisations" | "customers" | "analytics" | "promotions">("overview");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState<string | null>(null);
@@ -53,16 +57,18 @@ export default function AdminPage() {
   const [customerSearch, setCustomerSearch] = useState("");
 
   const loadData = useCallback(async () => {
-    const [{ data: categoryRows }, { data: productRows }, { data: orderRows }, { data: historyRows }] = await Promise.all([
+    const [{ data: categoryRows }, { data: productRows }, { data: orderRows }, { data: historyRows }, { data: promoRows }] = await Promise.all([
       supabase.from("product_categories").select("id,name,slug,is_active").order("sort_order"),
       supabase.from("products").select("*,product_categories(name),product_images(id,image_url,is_primary,sort_order)").order("created_at", { ascending: false }),
       supabase.from("store_orders").select("*").order("created_at", { ascending: false }).limit(100),
-      supabase.from("store_inventory_logs").select("id,product_name,adjustment,previous_stock,new_stock,reason,event_type,order_id,created_at").order("created_at", { ascending: false }).limit(100)
+      supabase.from("store_inventory_logs").select("id,product_name,adjustment,previous_stock,new_stock,reason,event_type,order_id,created_at").order("created_at", { ascending: false }).limit(100),
+      supabase.from("promo_codes").select("*").order("created_at",{ascending:false})
     ]);
     setCategories((categoryRows ?? []) as Category[]);
     setProducts((productRows ?? []) as Product[]);
     setOrders((orderRows ?? []) as StoreOrder[]);
     setInventoryHistory(historyRows ?? []);
+    setPromotions((promoRows ?? []) as Promo[]);
   }, [supabase]);
 
   const verifySession = useCallback(async () => {
@@ -173,6 +179,35 @@ export default function AdminPage() {
     if (error) setNotice(error.message); else { setNotice(`Order #${order.order_number} updated.`); await loadData(); }
   }
 
+  async function savePromotion(event: FormEvent) {
+    event.preventDefault();
+    const code=promoForm.code.trim().toUpperCase().replace(/\s+/g,"");
+    const value=Number(promoForm.discount_value);
+    if(!/^[A-Z0-9_-]{3,40}$/.test(code)||!Number.isInteger(value)||value<=0||(promoForm.discount_type==="percent"&&value>100)) {
+      setNotice("Enter a valid code and discount value."); return;
+    }
+    const payload={code,discount_type:promoForm.discount_type,discount_value:promoForm.discount_type==="fixed"?Math.round(value*100):value,min_order_paise:Math.round(Math.max(0,Number(promoForm.min_order)||0)*100),max_discount_paise:promoForm.max_discount?Math.round(Number(promoForm.max_discount)*100):null,usage_limit:promoForm.usage_limit?Math.max(1,Math.floor(Number(promoForm.usage_limit))):null,starts_at:promoForm.starts_at?new Date(promoForm.starts_at).toISOString():null,ends_at:promoForm.ends_at?new Date(promoForm.ends_at).toISOString():null,is_active:promoForm.is_active};
+    if(payload.max_discount_paise!==null&&payload.max_discount_paise<0){setNotice("Maximum discount cannot be negative.");return;}
+    setBusy(true);
+    const result=promoEditing?await supabase.from("promo_codes").update(payload).eq("id",promoEditing):await supabase.from("promo_codes").insert(payload);
+    if(result.error)setNotice(result.error.message);
+    else{setNotice(promoEditing?"Promotion updated.":"Promotion created.");setPromoEditing(null);setPromoForm({code:"",discount_type:"percent",discount_value:"10",min_order:"0",max_discount:"",usage_limit:"",starts_at:"",ends_at:"",is_active:true});await loadData();}
+    setBusy(false);
+  }
+  function editPromotion(promo:Promo){
+    setPromoEditing(promo.id);
+    setPromoForm({code:promo.code,discount_type:promo.discount_type,discount_value:String(promo.discount_type==="fixed"?promo.discount_value/100:promo.discount_value),min_order:String(promo.min_order_paise/100),max_discount:promo.max_discount_paise===null?"":String(promo.max_discount_paise/100),usage_limit:promo.usage_limit===null?"":String(promo.usage_limit),starts_at:promo.starts_at?new Date(promo.starts_at).toISOString().slice(0,16):"",ends_at:promo.ends_at?new Date(promo.ends_at).toISOString().slice(0,16):"",is_active:promo.is_active});
+  }
+  async function togglePromotion(promo:Promo){
+    const {error}=await supabase.from("promo_codes").update({is_active:!promo.is_active}).eq("id",promo.id);
+    if(error)setNotice(error.message);else{setNotice("Promotion status updated.");await loadData();}
+  }
+  async function deletePromotion(promo:Promo){
+    if(!window.confirm("Delete promotion "+promo.code+"? Existing orders will retain their recorded discount."))return;
+    const {error}=await supabase.from("promo_codes").delete().eq("id",promo.id);
+    if(error)setNotice(error.message);else{setNotice("Promotion deleted.");await loadData();}
+  }
+
   async function addCategory(event: FormEvent) {
     event.preventDefault();
     const name = categoryName.trim(); if (!name) return;
@@ -252,6 +287,7 @@ export default function AdminPage() {
       <button className={tab==="customisations"?"selected":""} onClick={()=>setTab("customisations")}><Sparkles size={17}/> Custom requests <span>{customOrders.length}</span></button>
       <button className={tab==="customers"?"selected":""} onClick={()=>setTab("customers")}><ShoppingBag size={17}/> Customers <span>{customerProfiles.length}</span></button>
       <button className={tab==="analytics"?"selected":""} onClick={()=>setTab("analytics")}><LayoutDashboard size={17}/> Sales analytics</button>
+      <button className={tab==="promotions"?"selected":""} onClick={()=>setTab("promotions")}><Sparkles size={17}/> Promotions <span>{promotions.filter(p=>p.is_active).length}</span></button>
       <div className="admin-side-bottom"><div className="admin-user"><div className="admin-avatar">{userEmail.slice(0,1).toUpperCase()}</div><div><strong>Store owner</strong><small>{userEmail}</small></div></div><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </aside>
     <section className="admin-main">
@@ -289,6 +325,14 @@ export default function AdminPage() {
         </>}
         {tab==="customisations"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">PERSONALISED JEWELLERY</div><h1>Custom requests</h1><p>Review customer colour and design preferences before confirming each order.</p></div><button className="admin-secondary" onClick={()=>void loadData()}><RefreshCw size={14}/> Refresh</button></div>
           {customOrders.length===0?<div className="admin-panel admin-empty"><div className="admin-empty-icon"><Sparkles size={24}/></div><h3>No custom requests yet.</h3><p>When customers submit a colour or design preference through a product page, it will appear here.</p></div>:<div className="admin-custom-request-list">{customOrders.map(order=><article className="admin-panel admin-custom-request" key={order.id}><div className="admin-custom-request-head"><div><div className="admin-eyebrow">ORDER #{order.order_number} · {new Date(order.created_at).toLocaleString("en-IN")}</div><h2>{order.customer_name}</h2><p>{order.phone}{order.email?" · "+order.email:""}</p></div><span className={"admin-status "+(order.status==="new"?"draft":"live")}>{order.status}</span></div><div className="admin-custom-request-products">{(order.items??[]).map((item:any,index:number)=><span key={index}>{item.name} × {item.quantity}</span>)}</div><div className="admin-custom-request-note"><span>REQUESTED PERSONALISATION</span><p>{customRequestText(order.customer_note)||order.customer_note}</p></div>{order.address&&<p className="admin-order-detail"><b>Delivery address:</b> {order.address}</p>}<div className="admin-order-controls"><label>Request / order progress<select value={order.status} onChange={e=>void updateOrderStatus(order,e.target.value as StoreOrder["status"])}><option value="new">New — review request</option><option value="confirmed">Confirmed — options agreed</option><option value="processing">Processing — making piece</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></label><span className="admin-status draft">Payment: {order.payment_status}</span></div></article>)}</div>}
+        </>}
+        {tab==="promotions"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">CAMPAIGNS & DISCOUNTS</div><h1>Marketing & promotions</h1><p>Create coupon codes and manage offer windows for your customers.</p></div><button className="admin-secondary" onClick={()=>void loadData()}><RefreshCw size={14}/> Refresh</button></div>
+          <div className="admin-stat-grid"><article><span><Sparkles size={17}/> TOTAL CAMPAIGNS</span><strong>{promotions.length}</strong><small>All saved promotion codes</small></article><article><span><BadgeCheck size={17}/> ACTIVE CAMPAIGNS</span><strong>{promotions.filter(p=>p.is_active).length}</strong><small>Enabled for checkout</small></article><article><span><Package size={17}/> CHECKOUT USES</span><strong>{promotions.reduce((sum,p)=>sum+p.usage_count,0)}</strong><small>Codes reserved at checkout</small></article><article><span><ShoppingBag size={17}/> USAGE LIMITS</span><strong>{promotions.filter(p=>p.usage_limit!==null).length}</strong><small>Campaigns with a use cap</small></article></div>
+          <form className="admin-panel admin-promo-form" onSubmit={savePromotion}><div className="admin-panel-head"><div><div className="admin-eyebrow">{promoEditing?"EDIT CAMPAIGN":"NEW CAMPAIGN"}</div><h2>{promoEditing?"Update promotion":"Create a promotion"}</h2></div>{promoEditing&&<button type="button" className="admin-secondary small" onClick={()=>{setPromoEditing(null);setPromoForm({code:"",discount_type:"percent",discount_value:"10",min_order:"0",max_discount:"",usage_limit:"",starts_at:"",ends_at:"",is_active:true});}}>Cancel edit</button>}</div>
+            <div className="admin-form-grid"><label>Coupon code *<input required maxLength={40} value={promoForm.code} onChange={e=>setPromoForm({...promoForm,code:e.target.value.toUpperCase()})} placeholder="WELCOME10"/></label><label>Discount type<select value={promoForm.discount_type} onChange={e=>setPromoForm({...promoForm,discount_type:e.target.value as "percent"|"fixed"})}><option value="percent">Percentage (%)</option><option value="fixed">Fixed amount (₹)</option></select></label><label>Discount value *<input required type="number" min="1" max={promoForm.discount_type==="percent"?100:100000} step="1" value={promoForm.discount_value} onChange={e=>setPromoForm({...promoForm,discount_value:e.target.value})}/></label><label>Minimum order value (₹)<input type="number" min="0" step="1" value={promoForm.min_order} onChange={e=>setPromoForm({...promoForm,min_order:e.target.value})}/></label><label>Maximum discount cap (₹)<input type="number" min="0" step="1" value={promoForm.max_discount} onChange={e=>setPromoForm({...promoForm,max_discount:e.target.value})} placeholder="Optional"/></label><label>Maximum uses<input type="number" min="1" step="1" value={promoForm.usage_limit} onChange={e=>setPromoForm({...promoForm,usage_limit:e.target.value})} placeholder="Unlimited"/></label><label>Starts at<input type="datetime-local" value={promoForm.starts_at} onChange={e=>setPromoForm({...promoForm,starts_at:e.target.value})}/></label><label>Ends at<input type="datetime-local" value={promoForm.ends_at} onChange={e=>setPromoForm({...promoForm,ends_at:e.target.value})}/></label></div>
+            <div className="admin-checks"><label><input type="checkbox" checked={promoForm.is_active} onChange={e=>setPromoForm({...promoForm,is_active:e.target.checked})}/> Enable this promotion</label></div><div className="admin-form-actions"><button className="admin-primary" disabled={busy}>{busy?"Saving…":promoEditing?"Save campaign":"Create campaign"} <Check size={16}/></button></div>
+          </form>
+          <div className="admin-panel"><div className="admin-panel-head"><div><div className="admin-eyebrow">SAVED OFFERS</div><h2>Campaign library</h2></div><span className="admin-analytics-note">{promotions.length} promotions</span></div>{promotions.length===0?<p className="admin-history-empty">No campaigns yet. Create your first coupon above.</p>:<div className="admin-promo-list">{promotions.map(promo=><article className="admin-promo-card" key={promo.id}><div><div className="admin-eyebrow">{promo.discount_type==="percent"?promo.discount_value+"% OFF":money(promo.discount_value)} · {promo.is_active?"ENABLED":"DISABLED"}</div><h3>{promo.code}</h3><p>Minimum order {money(promo.min_order_paise)}{promo.max_discount_paise!==null?" · Max discount "+money(promo.max_discount_paise):""}</p><small>{promo.usage_count} / {promo.usage_limit??"∞"} checkout uses{promo.starts_at?" · Starts "+new Date(promo.starts_at).toLocaleString("en-IN"):""}{promo.ends_at?" · Ends "+new Date(promo.ends_at).toLocaleString("en-IN"):""}</small></div><div className="admin-row-actions"><button className="admin-secondary small" onClick={()=>editPromotion(promo)}>Edit</button><button className="admin-secondary small" onClick={()=>void togglePromotion(promo)}>{promo.is_active?"Disable":"Enable"}</button><button className="admin-icon-action danger" onClick={()=>void deletePromotion(promo)} aria-label={"Delete "+promo.code}><Trash2 size={15}/></button></div></article>)}</div>}</div>
         </>}
         {tab==="analytics"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">BUSINESS PERFORMANCE</div><h1>Sales analytics</h1><p>Track paid revenue, sales momentum and your best-selling pieces.</p></div><button className="admin-secondary" onClick={()=>void loadData()}><RefreshCw size={14}/> Refresh analytics</button></div>
           <div className="admin-stat-grid"><article><span><BadgeCheck size={17}/> TOTAL PAID REVENUE</span><strong>{money(paidRevenueAll)}</strong><small>Across the latest {orders.length} loaded orders</small></article><article><span><Package size={17}/> PAID ORDERS</span><strong>{paidOrderHistory.length}</strong><small>Successfully paid orders</small></article><article><span><ShoppingBag size={17}/> UNITS SOLD</span><strong>{paidItems.reduce((sum,item)=>sum+item.quantity,0)}</strong><small>Quantities from paid order items</small></article><article><span><BadgeCheck size={17}/> AVERAGE ORDER</span><strong>{paidOrderHistory.length?money(Math.round(paidRevenueAll/paidOrderHistory.length)):"₹0"}</strong><small>Average paid order value</small></article></div>
