@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, BadgeCheck, Gift, LockKeyhole, LogOut, Package, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Chrome, Gift, LockKeyhole, LogOut, Package, RefreshCw, ShieldCheck, Sparkles } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Order = {id:string;order_number:number;customer_name:string;items:any[];subtotal_paise:number;discount_paise:number|null;loyalty_discount_paise:number|null;loyalty_points_redeemed:number|null;coupon_code:string|null;status:string;payment_status:string;created_at:string};
@@ -15,6 +15,8 @@ const statusTone=(status:string)=>status==="delivered"?"done":status==="cancelle
 export default function AccountPage(){
  const supabase=useMemo(()=>createClient(),[]);
  const [phone,setPhone]=useState("");
+ const [googleNeedsPhone,setGoogleNeedsPhone]=useState(false);
+ const [phoneLinkOtpSent,setPhoneLinkOtpSent]=useState(false);
  const [otp,setOtp]=useState("");
  const [otpSent,setOtpSent]=useState(false);
  const [loginMode,setLoginMode]=useState<"otp"|"password">("otp");
@@ -31,7 +33,9 @@ export default function AccountPage(){
  const [data,setData]=useState<AccountData|null>(null);
  const loadAccount=useCallback(async()=>{
   const {data:{user}}=await supabase.auth.getUser();
-  if(!user?.phone){setData(null);setLoading(false);return;}
+  if(!user){setData(null);setGoogleNeedsPhone(false);setLoading(false);return;}
+  if(!user.phone){setData(null);setGoogleNeedsPhone(Boolean(user.email));setLoading(false);return;}
+  setGoogleNeedsPhone(false);
   const response=await fetch("/api/account",{cache:"no-store"});
   const result=await response.json();
   if(!response.ok){setError(result.error||"Unable to load account.");setData(null);}
@@ -39,6 +43,26 @@ export default function AccountPage(){
   setLoading(false);
  },[supabase]);
  useEffect(()=>{void loadAccount();},[loadAccount]);
+ async function signInWithGoogle(){
+  setBusy(true);setError("");
+  const {error}=await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin+"/account"} });
+  if(error){setError(error.message);setBusy(false);}
+ }
+ async function sendPhoneLinkCode(event:React.FormEvent){
+  event.preventDefault();setBusy(true);setError("");setNotice("");
+  const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
+  if(!/^\\d{10}$/.test(digits)){setError("Enter a valid 10-digit Indian mobile number.");setBusy(false);return;}
+  const {error}=await supabase.auth.updateUser({phone:"+91"+digits});
+  if(error)setError(error.message);else{setPhoneLinkOtpSent(true);setNotice("A verification code has been sent to link this mobile number to your Google account.");}
+  setBusy(false);
+ }
+ async function verifyPhoneLinkCode(event:React.FormEvent){
+  event.preventDefault();setBusy(true);setError("");setNotice("");
+  const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
+  const {error}=await supabase.auth.verifyOtp({phone:"+91"+digits,token:otp.trim(),type:"phone_change"});
+  if(error)setError(error.message);else{setOtp("");setPhoneLinkOtpSent(false);setGoogleNeedsPhone(false);setLoading(true);await loadAccount();}
+  setBusy(false);
+ }
  async function sendOtp(event:React.FormEvent){
   event.preventDefault();setBusy(true);setError("");setNotice("");
   const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
@@ -82,9 +106,10 @@ export default function AccountPage(){
  if(loading)return <main className="container section kc-account"><p>Loading your account…</p></main>;
  return <main className="container kc-account">
   <header className="kc-account-header"><Link href="/shop" className="back-link"><ArrowLeft size={15}/> BACK TO SHOP</Link><Link href="/" className="brand">KURINJI<small>CREATIONS</small></Link><span className="kc-account-secure"><ShieldCheck size={14}/> SECURE</span></header>
-  {!data?<section className="kc-account-login">
+  {googleNeedsPhone?<section className="kc-account-login"><div className="kc-account-mark"><ShieldCheck size={25}/></div><div className="kicker">ONE LAST STEP</div><h1 className="section-title">Link your mobile number.</h1><p>Your Google account is signed in. Verify your mobile number to securely connect your orders and Kurinji rewards.</p>{!phoneLinkOtpSent?<form onSubmit={sendPhoneLinkCode}><label>Mobile number<input type="tel" inputMode="numeric" autoComplete="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="10-digit mobile number" maxLength={14}/></label><button className="primary-button" disabled={busy}>{busy?"SENDING…":"SEND VERIFICATION CODE"}</button></form>:<form onSubmit={verifyPhoneLinkCode}><label>SMS verification code<input type="text" inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={e=>setOtp(e.target.value)} placeholder="Enter the SMS code" maxLength={8}/></label><button className="primary-button" disabled={busy||otp.trim().length<4}>{busy?"VERIFYING…":"VERIFY & CONTINUE"}</button><button type="button" className="kc-account-text-button" onClick={()=>{setPhoneLinkOtpSent(false);setOtp("");}}>Change mobile number</button></form>}{error&&<p className="kc-account-error" role="alert">{error}</p>}{notice&&<p className="kc-account-notice" role="status">{notice}</p>}</section>:!data?<section className="kc-account-login">
    <div className="kc-account-mark"><ShieldCheck size={25}/></div><div className="kicker">YOUR KURINJI ACCOUNT</div><h1 className="section-title">A little space, just for you.</h1>
    <p>Verify your mobile number to view your orders, delivery progress and loyalty rewards.</p>
+   <button type="button" className="kc-google-signin" onClick={signInWithGoogle} disabled={busy}><Chrome size={17}/> CONTINUE WITH GOOGLE</button><div className="kc-login-divider"><span>OR CONTINUE WITH MOBILE</span></div>
    {resetVerified?<form onSubmit={saveNewPassword}><label>New password<input type="password" autoComplete="new-password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} placeholder="At least 8 characters" minLength={8}/></label><label>Confirm new password<input type="password" autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} placeholder="Enter password again"/></label><button className="primary-button" disabled={busy}>{busy?"UPDATING…":"RESET PASSWORD"}</button></form>
    :resetMode?<><p>Enter your registered mobile number. We’ll send an SMS verification code before allowing a password reset.</p>{!otpSent?<form onSubmit={sendOtp}><label>Mobile number<input type="tel" inputMode="numeric" autoComplete="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="10-digit mobile number" maxLength={14}/></label><button className="primary-button" disabled={busy}>{busy?"SENDING…":"SEND RESET CODE"}</button></form>:<form onSubmit={verifyOtp}><label>Verification code<input type="text" inputMode="numeric" autoComplete="one-time-code" value={otp} onChange={e=>setOtp(e.target.value)} placeholder="Enter the SMS code" maxLength={8}/></label><button className="primary-button" disabled={busy||otp.trim().length<4}>{busy?"VERIFYING…":"VERIFY MOBILE NUMBER"}</button><button type="button" className="kc-account-text-button" onClick={()=>{setOtpSent(false);setOtp("");}}>Change mobile number</button></form>}<button type="button" className="kc-account-text-button" onClick={()=>{setResetMode(false);setOtpSent(false);setOtp("");}}>Back to sign in</button></>
    :loginMode==="password"?<form onSubmit={signInPassword}><label>Mobile number<input type="tel" inputMode="numeric" autoComplete="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="10-digit mobile number" maxLength={14}/></label><label>Password<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Your password"/></label><button className="primary-button" disabled={busy}>{busy?"SIGNING IN…":"SIGN IN"}</button><button type="button" className="kc-account-text-button" onClick={()=>{setResetMode(true);setPassword("");setError("");}}>Forgot password?</button><button type="button" className="kc-account-text-button" onClick={()=>{setLoginMode("otp");setPassword("");}}>Sign in with SMS code instead</button></form>
