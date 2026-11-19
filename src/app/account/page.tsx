@@ -67,7 +67,7 @@ export default function AccountPage(){
   event.preventDefault();setBusy(true);setError("");setNotice("");
   const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
   if(!/^\d{10}$/.test(digits)){setError("Enter a valid 10-digit Indian mobile number.");setBusy(false);return;}
-  const {error}=await supabase.auth.signInWithOtp({phone:"+91"+digits,options:{shouldCreateUser:false}});
+  const {error}=await supabase.auth.signInWithOtp({phone:"+91"+digits,options:{shouldCreateUser:true}});
   if(error)setError(error.message);else{setOtpSent(true);setNotice("A verification code has been sent to your mobile.");}
   setBusy(false);
  }
