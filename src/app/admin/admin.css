@@ -137,3 +137,12 @@
 @media(max-width:640px){.admin-stat-grid-extra{margin-top:0}.admin-recent-row{align-items:flex-start}.admin-recent-row>div:first-child strong{max-width:180px}}
 
 .admin-top-actions{display:flex;align-items:center;gap:18px}.admin-refresh{display:inline-flex;align-items:center;gap:7px;min-height:34px;padding:0 11px;font-size:9px}@media(max-width:560px){.admin-top-actions{gap:10px}.admin-refresh{font-size:0;padding:0 9px}.admin-refresh svg{width:15px;height:15px}}
+
+/* Order management filters and export */
+.admin-order-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.admin-order-filters{display:flex;align-items:center;gap:9px;flex:1;flex-wrap:wrap}
+.admin-order-filters select{min-height:36px;border:1px solid #e5ded4;background:#fffefa;color:#61564c;padding:0 11px;font:10px 'DM Sans',sans-serif;max-width:190px}
+.admin-order-filters .admin-search input{width:190px}
+.admin-order-export{display:flex;align-items:center;gap:12px;white-space:nowrap}
+.admin-order-export>span{font-size:9px;color:#93877a}
+@media(max-width:760px){.admin-order-toolbar{align-items:stretch;flex-direction:column}.admin-order-filters{display:grid;grid-template-columns:1fr 1fr}.admin-order-filters .admin-search{grid-column:1/-1}.admin-order-filters .admin-search input{width:100%}.admin-order-filters select{max-width:none;width:100%}.admin-order-export{justify-content:space-between}}
