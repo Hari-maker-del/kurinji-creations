@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, BadgeCheck, Box, Camera, Check, ChevronDown, CirclePlus, ClipboardList, ImagePlus, LayoutDashboard, LogOut, Package, Pencil, Plus, Search, Settings2, ShieldCheck, ShoppingBag, Sparkles, Trash2, X } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Box, Camera, Check, ChevronDown, CirclePlus, ClipboardList, ImagePlus, LayoutDashboard, LogOut, Package, Pencil, Plus, RefreshCw, Search, Settings2, ShieldCheck, ShoppingBag, Sparkles, Trash2, X } from "lucide-react";
 import "./admin.css";
 
 type Category = { id: string; name: string; slug: string; is_active: boolean };
@@ -210,7 +210,7 @@ export default function AdminPage() {
       <div className="admin-side-bottom"><div className="admin-user"><div className="admin-avatar">{userEmail.slice(0,1).toUpperCase()}</div><div><strong>Store owner</strong><small>{userEmail}</small></div></div><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </aside>
     <section className="admin-main">
-      <header className="admin-topbar"><div><div className="admin-eyebrow">KURINJI CREATIONS / STUDIO</div><div className="admin-top-title">The boutique workspace</div></div><a href="/" className="admin-view-store">View storefront <ArrowLeft className="admin-arrow-flip" size={14}/></a></header>
+      <header className="admin-topbar"><div><div className="admin-eyebrow">KURINJI CREATIONS / STUDIO</div><div className="admin-top-title">The boutique workspace</div></div><div className="admin-top-actions"><button className="admin-secondary admin-refresh" onClick={()=>void loadData()}><RefreshCw size={14}/> Refresh data</button><a href="/" className="admin-view-store">View storefront <ArrowLeft className="admin-arrow-flip" size={14}/></a></div></header>
       <div className="admin-content">
         {notice&&<div className="admin-notice"><Check size={16}/>{notice}<button onClick={()=>setNotice("")}><X size={15}/></button></div>}
         {tab==="overview"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">YOUR STORE AT A GLANCE</div><h1>Good day, Kurinji.</h1><p>Here’s what’s happening with your collection.</p></div><button className="admin-primary compact" onClick={newProduct}><Plus size={16}/> Add a product</button></div>
