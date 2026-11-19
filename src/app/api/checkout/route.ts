@@ -93,8 +93,11 @@ export async function POST(request: Request) {
     }
 
     if (appliedCoupon) {
-      const { error: usageError } = await admin.from("promo_codes").update({ usage_count: (await admin.from("promo_codes").select("usage_count").eq("code", appliedCoupon).single()).data?.usage_count + 1, updated_at: new Date().toISOString() }).eq("code", appliedCoupon);
-      if (usageError) console.error("Promotion usage counter update failed", usageError.message);
+      const { data: usageReserved, error: usageError } = await admin.rpc("increment_promo_usage", { p_code: appliedCoupon });
+      if (usageError || !usageReserved) {
+        await admin.from("store_orders").delete().eq("id", savedOrder.id);
+        return NextResponse.json({ error: "This promotion has just reached its usage limit. Please retry without the code." }, { status: 409 });
+      }
     }
 
     return NextResponse.json({
