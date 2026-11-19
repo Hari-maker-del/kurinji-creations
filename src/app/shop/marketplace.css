@@ -100,3 +100,36 @@
 .market-pricing{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:8px}.market-pricing .market-price{margin-top:0}.market-pricing del{font-size:10px;color:#988e83}.market-discount{font-size:9px;background:#e9f1e6;color:#416744;padding:4px 6px;font-weight:600;letter-spacing:.4px}.market-savings{font-size:9px;color:#4f7651;margin-top:4px}
 
 .market-stock-label{font-size:10px;letter-spacing:.04em;color:#6c8066;margin-top:5px}.market-stock-label:has(+ .market-pricing){margin-bottom:3px}.market-add:disabled{opacity:.45;cursor:not-allowed;background:#8b8984}
+
+/* Approved original Kurinji master artwork on the storefront */
+.market-header{min-height:116px;align-items:center}
+.market-header .kc-shop-logo{width:104px;height:108px;flex:0 0 104px;display:flex;align-items:center;justify-content:center;overflow:visible}
+.market-header .kc-shop-logo img{display:block;width:100%;height:100%;object-fit:contain;object-position:center}
+.market-footer .kc-shop-footer-logo{width:104px;height:120px;display:inline-flex;align-items:center;justify-content:center;overflow:visible}
+.market-footer .kc-shop-footer-logo img{width:100%;height:100%;object-fit:contain;object-position:center;display:block}
+.market-banner{height:300px;grid-template-columns:1.02fr .98fr;background:#302820}
+.market-banner>div{position:relative;z-index:1;align-self:center;padding:38px clamp(24px,5vw,68px);color:#fffefa}
+.market-banner>div small{display:block;color:#d5b38c;font-size:9px;letter-spacing:2.2px}
+.market-banner>div h1{display:block;color:#fffefa;font:400 clamp(40px,4vw,54px)/1.04 'Italiana',serif;margin:15px 0}
+.market-banner>div h1 em{color:#d4ad82;font-style:italic}
+.market-banner>div p{display:block;color:#e3d9cd;font-size:12px;line-height:1.8;max-width:360px;margin:0 0 12px}
+.market-banner>div a{display:inline-flex;color:#f4e5d3;border-bottom:1px solid #c3a17d}
+.market-banner>img{display:block;width:100%;height:100%;min-width:0;object-fit:cover;object-position:center 48%;filter:saturate(.82)}
+.marketplace{background:#f8f5f0}
+.market-results{background:#fffefa}
+@media(max-width:850px){
+ .market-header{min-height:100px}
+ .market-header .kc-shop-logo{width:88px;height:94px;flex-basis:88px}
+ .market-banner{height:250px}
+}
+@media(max-width:560px){
+ .market-header{min-height:88px;gap:7px}
+ .market-header .kc-shop-logo{width:62px;height:76px;flex:0 0 62px}
+ .market-footer .kc-shop-footer-logo{width:86px;height:100px}
+ .market-banner{height:230px;grid-template-columns:1.08fr .92fr}
+ .market-banner>div{padding:18px 13px}
+ .market-banner>div h1{font-size:30px;margin:9px 0}
+ .market-banner>div p{font-size:9px;line-height:1.55}
+ .market-banner>div small{font-size:7px;letter-spacing:1px}
+ .market-banner>div a{font-size:7px;gap:5px}
+}
