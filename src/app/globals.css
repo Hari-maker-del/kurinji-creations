@@ -221,3 +221,16 @@
  .kc-love{grid-template-columns:1fr;padding:65px 24px;gap:32px}
  .kc-love-note{min-height:190px}
 }
+
+
+/* Password management in customer account */
+.kc-password-panel{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;padding:25px 0 30px;margin:0 0 30px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.kc-password-panel .section-title{font-size:30px;margin:8px 0}
+.kc-password-panel>div>p{font-size:11px;color:var(--muted);margin:0}
+.kc-password-panel form{width:min(100%,390px);display:grid;gap:12px}
+.kc-password-panel label{display:grid;gap:7px;font-size:10px;letter-spacing:.06em}
+.kc-password-panel input{height:44px;width:100%;padding:0 12px;border:1px solid var(--line);background:#fff;font-size:12px;outline:none}
+.kc-password-panel input:focus{border-color:var(--gold)}
+.kc-password-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.kc-account-login form label{display:grid;gap:8px}
+@media(max-width:650px){.kc-password-panel{display:grid;gap:18px}.kc-password-panel form{width:100%}}
