@@ -238,7 +238,7 @@ export default function AdminPage() {
     groups[key] = current;
     return groups;
   }, {} as Record<string, {key:string;name:string;phone:string;email:string|null;address:string|null;orders:StoreOrder[]}>))
-    .map(customer => ({ ...customer, paidSpend: customer.orders.filter(order => order.payment_status === "paid").reduce((sum, order) => sum + (Number(order.subtotal_paise) || 0), 0), lastOrder: [...customer.orders].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime())[0] }))
+    .map(customer => ({ ...customer, paidSpend: customer.orders.filter(order => order.payment_status === "paid").reduce((sum, order) => sum + (Number(order.subtotal_paise) || 0) - (Number(order.discount_paise) || 0), 0), lastOrder: [...customer.orders].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime())[0] }))
     .sort((a,b)=>b.paidSpend-a.paidSpend);
   const filteredCustomers = customerProfiles.filter(customer => [customer.name, customer.phone, customer.email ?? ""].some(value => value.toLowerCase().includes(customerSearch.trim().toLowerCase())));
   const paidOrderHistory = orders.filter(order => order.payment_status === "paid");
@@ -261,7 +261,7 @@ export default function AdminPage() {
   });
   function exportOrders() {
     const columns = ["Order number","Date","Customer","Phone","Email","Order status","Payment status","Amount (INR)","Items"];
-    const rows = filteredOrders.map(order => [order.order_number,new Date(order.created_at).toLocaleString("en-IN"),order.customer_name,order.phone,order.email ?? "",order.status,order.payment_status,(order.subtotal_paise/100).toFixed(2),(order.items ?? []).map((item:any)=>String(item.name)+" x "+item.quantity).join("; ")]);
+    const rows = filteredOrders.map(order => [order.order_number,new Date(order.created_at).toLocaleString("en-IN"),order.customer_name,order.phone,order.email ?? "",order.status,order.payment_status,((order.subtotal_paise-(order.discount_paise??0))/100).toFixed(2),(order.items ?? []).map((item:any)=>String(item.name)+" x "+item.quantity).join("; ")]);
     const csv = [columns,...rows].map(row=>row.map(value=>'"'+String(value ?? "").replace(/"/g,'""')+'"').join(",")).join("\r\n");
     const url = URL.createObjectURL(new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}));
     const link = document.createElement("a"); link.href=url; link.download="kurinji-orders-"+new Date().toISOString().slice(0,10)+".csv"; link.click(); URL.revokeObjectURL(url);
