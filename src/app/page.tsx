@@ -32,18 +32,18 @@ export default function Home() {
       </section>
 
       <section className="kc-custom" id="custom">
-        <div className="kc-custom-image"><img src="https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1400&q=90" alt="Delicate handcrafted jewellery details" loading="lazy"/></div>
         <div className="kc-custom-copy"><div className="kc-eyebrow"><span/> YOUR IDEA, YOUR DETAILS</div><h2>Made personal.<br/><em>Made for you.</em></h2><p>A favourite colour, a thoughtful detail or an idea you have been saving. Tell us what you imagine and let’s explore a custom creation together.</p><ul><li>Share your preferred colours</li><li>Tell us about your design idea</li><li>Send a reference photo for inspiration</li></ul><Link href="/about#contact" className="kc-button">DISCUSS A CUSTOM ORDER <span>↗</span></Link></div>
+        <div className="kc-custom-note"><span className="kc-note-mark">01 / PERSONAL BY DESIGN</span><p>Choose the colours.<br/>Shape the details.<br/><em>Make it yours.</em></p><span className="kc-note-rule"></span><small>MADE AROUND YOUR IDEA</small></div>
       </section>
 
       <section className="kc-craft" id="craft">
         <div className="kc-craft-copy"><div className="kc-eyebrow"><span/> THE ART OF THE LITTLE DETAILS</div><h2>Thoughtfully finished.<br/><em>Meant to be treasured.</em></h2><p>Every detail contributes to how a piece looks, feels and becomes part of your story. We care about the finishing touches that make jewellery feel considered and special.</p><Link href="/shop" className="kc-text-link">EXPLORE THE STORE <span>↗</span></Link></div>
-        <div className="kc-craft-image"><img src="https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1400&q=90" alt="Close-up jewellery craftsmanship and finishing" loading="lazy"/></div>
+        <div className="kc-craft-details"><div><span>01</span><p>Considered details</p></div><div><span>02</span><p>Personal touches</p></div><div><span>03</span><p>Finished with care</p></div></div>
       </section>
 
       <section className="kc-love">
-        <div className="kc-love-image"><img src="https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?auto=format&fit=crop&w=1200&q=90" alt="Jewellery chosen for a meaningful moment" loading="lazy"/></div>
         <div className="kc-love-copy"><div className="kc-eyebrow"><span/> WORN, GIFTED, REMEMBERED</div><h2>Your moments<br/><em>make our story.</em></h2><p>The most beautiful part of what we do is knowing a piece becomes part of someone’s everyday or a moment worth celebrating. Have a Kurinji piece you love? We would be delighted to see how you wear it.</p><a className="kc-text-link" href="https://wa.me/919345858353?text=Hello%20Kurinji%20Creations!%20I%20would%20love%20to%20share%20my%20jewellery%20photo." target="_blank" rel="noreferrer">SHARE YOUR KURINJI MOMENT <span>↗</span></a></div>
+        <div className="kc-love-note"><span>✦</span><p>A little piece.<br/><em>A lasting memory.</em></p></div>
       </section>
 
       <section className="kc-brand-visit"><div className="kc-eyebrow"><span/> A LITTLE SOMETHING TO TREASURE</div><h2>Find the detail<br/><em>that feels like you.</em></h2><p>Discover the Kurinji Creations collection and choose something meaningful.</p><Link href="/shop" className="kc-button">VISIT THE STORE <span>↗</span></Link></section>
