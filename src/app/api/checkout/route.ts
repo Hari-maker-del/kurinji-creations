@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     const email = String(body.email ?? "").trim();
     const address = String(body.address ?? "").trim();
     const note = String(body.note ?? "").trim();
-    const couponCode = String(body.couponCode ?? "").trim().toUpperCase().replace(/\\s+/g, "");
+    const couponCode = String(body.couponCode ?? "").trim().toUpperCase().replace(/\s+/g, "");
     const items = body.items as CheckoutItem[];
 
     if (customerName.length < 2 || customerName.length > 100 || phone.length < 8 || phone.length > 20 ||
