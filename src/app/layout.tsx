@@ -2,15 +2,15 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kurinji Creations | Everyday Elegance",
-  description: "Discover thoughtfully selected jewellery and accessories from Kurinji Creations.",
+  title: "Kurinji Creations | Luxury Jewellery House",
+  description: "Kurinji Creations — a luxury jewellery house for handcrafted and personalised jewellery.",
   applicationName: "Kurinji Creations",
   verification: {
     google: "xW5wWg01CH9ZW2vRRp03KUCm4L78W4vtl7uutqOwjOU",
   },
   icons: {
-    icon: "/brand/kurinji-infinity-emblem.svg",
-    apple: "/brand/kurinji-infinity-emblem.svg",
+    icon: "/brand/kurinji-master-logo.svg",
+    apple: "/brand/kurinji-master-logo.svg",
   },
 };
 
