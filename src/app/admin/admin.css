@@ -159,3 +159,21 @@
 .admin-custom-request-note>span{font-size:8px;letter-spacing:.16em;color:#a98a62}
 .admin-custom-request-note p{font-size:12px;line-height:1.7;color:#51483e;margin:8px 0 0;white-space:pre-wrap}
 @media(max-width:650px){.admin-custom-request{padding:17px}.admin-custom-request-head{align-items:flex-start}.admin-custom-request-head h2{font-size:22px}}
+
+
+/* Customer relationship management */
+.admin-customer-list{display:grid;gap:13px}
+.admin-customer-card{border:1px solid #e9e2d9;background:#fffefa;padding:21px 23px}
+.admin-customer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.admin-customer-head h3{font:24px 'Playfair Display',serif;font-weight:400;margin:7px 0 5px}
+.admin-customer-head p{font-size:11px;color:#81766a;margin:0;line-height:1.6}
+.admin-customer-head>strong{font:22px 'Playfair Display',serif;color:#806044;text-align:right;white-space:nowrap}
+.admin-customer-head>strong small{display:block;font:8px 'DM Sans',sans-serif;letter-spacing:.15em;color:#93877a;margin-top:5px}
+.admin-customer-metrics{display:flex;gap:18px;flex-wrap:wrap;border-top:1px solid #eee8df;border-bottom:1px solid #eee8df;margin:16px 0;padding:12px 0;font-size:10px;color:#81766a}
+.admin-customer-metrics b{color:#51483e;font-weight:600}
+.admin-customer-history summary{font-size:10px;color:#806044;cursor:pointer;padding:4px 0}
+.admin-customer-history>div{display:grid;gap:0;margin-top:9px}
+.admin-customer-history>div>div{display:grid;grid-template-columns:1fr auto;gap:5px 14px;padding:11px 0;border-top:1px solid #eee8df;font-size:10px;color:#74685c}
+.admin-customer-history>div>div strong{font-weight:600;color:#51483e}
+.admin-customer-history>div>div small{grid-column:1/-1;color:#93877a;font-size:9px}
+@media(max-width:650px){.admin-customer-card{padding:16px}.admin-customer-head h3{font-size:21px}.admin-customer-head>strong{font-size:19px}.admin-customer-metrics{gap:10px}.admin-customer-history>div>div{grid-template-columns:1fr}.admin-customer-history>div>div strong{grid-row:2;text-align:left}}
