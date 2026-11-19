@@ -185,3 +185,39 @@
  .kc-brand-hero-image img,.kc-craft-image img,.kc-love-image img{transition:transform .8s ease}
  .kc-brand-hero-image:hover img,.kc-craft-image:hover img,.kc-love-image:hover img{transform:scale(1.025)}
 }
+
+
+/* Editorial, image-light homepage balance */
+.kc-brand-hero{min-height:570px;grid-template-columns:1fr 1fr;padding-top:58px;padding-bottom:54px;gap:clamp(32px,6vw,92px)}
+.kc-brand-hero-image{height:410px;max-width:570px;justify-self:end;width:100%;margin:0}
+.kc-brand-hero-foot{margin-top:42px}
+.kc-custom{display:grid;grid-template-columns:1.1fr .9fr;min-height:0;align-items:center;padding:88px clamp(26px,10vw,150px);gap:8%;background:#29251f}
+.kc-custom-copy{padding:0;max-width:560px}
+.kc-custom-note{min-height:300px;border:1px solid rgba(205,177,143,.42);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:35px;color:#f7f1e8;background:radial-gradient(ellipse at center,rgba(190,151,108,.12),transparent 68%)}
+.kc-note-mark,.kc-custom-note small{font-size:8px;letter-spacing:2px;color:#c5a47f}
+.kc-custom-note>p{font:clamp(34px,4vw,52px)/1.2 'Italiana',serif;margin:28px 0;color:#f7f1e8}
+.kc-custom-note>p em{color:#c5a47f}
+.kc-note-rule{width:44px;height:1px;background:#c5a47f;margin:0 0 18px}
+.kc-craft{grid-template-columns:1fr .8fr;padding-top:86px;padding-bottom:86px;gap:10%}
+.kc-craft-details{border-top:1px solid #d7cfc4}
+.kc-craft-details>div{display:flex;align-items:center;gap:24px;padding:23px 0;border-bottom:1px solid #d7cfc4}
+.kc-craft-details span{font-size:9px;letter-spacing:1.5px;color:#a77d58}
+.kc-craft-details p{font:25px 'Italiana',serif;margin:0;color:#302820}
+.kc-love{grid-template-columns:1fr .65fr;padding-top:86px;padding-bottom:86px;gap:10%}
+.kc-love-copy{max-width:620px}
+.kc-love-note{min-height:270px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border:1px solid #d8c8b5;background:#f4efe7}
+.kc-love-note>span{color:#a77d58;font-size:25px}
+.kc-love-note>p{font:clamp(30px,3.5vw,44px)/1.2 'Italiana',serif;color:#302820}
+.kc-love-note em{color:#a77d58}
+@media(max-width:760px){
+ .kc-brand-hero{padding:48px 22px 52px;gap:26px}
+ .kc-brand-hero-image{height:280px;width:100%;max-width:none;margin:0}
+ .kc-brand-hero-foot{margin-top:32px;flex-wrap:wrap}
+ .kc-custom{grid-template-columns:1fr;padding:62px 24px;gap:36px}
+ .kc-custom-note{min-height:210px}
+ .kc-custom-note>p{font-size:36px}
+ .kc-craft{grid-template-columns:1fr;padding:65px 24px;gap:35px}
+ .kc-craft-details>div{padding:17px 0}
+ .kc-love{grid-template-columns:1fr;padding:65px 24px;gap:32px}
+ .kc-love-note{min-height:190px}
+}
