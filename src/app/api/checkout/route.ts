@@ -75,19 +75,9 @@ export async function POST(request: Request) {
     const amount = subtotal - discountPaise;
     if (!Number.isSafeInteger(amount) || amount < 100) return NextResponse.json({ error: "Order total must be at least ₹1." }, { status: 400 });
 
-    const receipt = "kc_" + Date.now().toString();
-    const razorpayResponse = await fetch("https://api.razorpay.com/v1/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Basic " + Buffer.from(keyId + ":" + keySecret).toString("base64")
-      },
-      body: JSON.stringify({ amount, currency: "INR", receipt, notes: { store: "Kurinji Creations" } }),
-      cache: "no-store"
-    });
-    const razorpayOrder = await razorpayResponse.json();
-    if (!razorpayResponse.ok) {
-      return NextResponse.json({ error: "Unable to start payment. Please try again." }, { status: 502 });
+    const requestedPoints = Number(body.redeemPoints ?? 0);
+    if (!Number.isInteger(requestedPoints) || requestedPoints < 0 || requestedPoints > 1000000) {
+      return NextResponse.json({ error: "Enter a valid number of loyalty points." }, { status: 400 });
     }
 
     const { data: savedOrder, error: saveError } = await admin.from("store_orders").insert({
@@ -95,16 +85,59 @@ export async function POST(request: Request) {
       customer_note: note || null, items: orderItems, subtotal_paise: subtotal,
       coupon_code: appliedCoupon, discount_paise: discountPaise,
       referral_code: referralCode || null, referrer_account_id: referrerAccountId,
-      status: "new", payment_status: "pending", razorpay_order_id: razorpayOrder.id
+      status: "new", payment_status: "pending"
     }).select("id,order_number").single();
-
     if (saveError || !savedOrder) {
-      return NextResponse.json({ error: "Payment was created but the order could not be saved. Please contact the store before retrying." }, { status: 500 });
+      return NextResponse.json({ error: "Unable to save your order. Please try again." }, { status: 500 });
+    }
+
+    let loyaltyPointsRedeemed = 0;
+    let loyaltyDiscountPaise = 0;
+    if (requestedPoints > 0) {
+      const { data: reservation, error: reserveError } = await admin.rpc("reserve_store_loyalty_points", {
+        p_order_id: savedOrder.id, p_phone: phone, p_requested_points: requestedPoints
+      });
+      const reserved = Array.isArray(reservation) ? reservation[0] : reservation;
+      if (reserveError || !reserved) {
+        await admin.from("store_orders").delete().eq("id", savedOrder.id);
+        return NextResponse.json({ error: reserveError?.message || "Unable to reserve loyalty points." }, { status: 400 });
+      }
+      loyaltyPointsRedeemed = Number(reserved.points_redeemed || 0);
+      loyaltyDiscountPaise = Number(reserved.discount_paise || 0);
+    }
+
+    const amount = subtotal - discountPaise - loyaltyDiscountPaise;
+    if (!Number.isSafeInteger(amount) || amount < 100) {
+      await admin.rpc("release_store_loyalty_redemption", { p_order_id: savedOrder.id, p_razorpay_order_id: null });
+      await admin.from("store_orders").delete().eq("id", savedOrder.id);
+      return NextResponse.json({ error: "Order total must be at least ₹1." }, { status: 400 });
+    }
+
+    const receipt = "kc_" + Date.now().toString();
+    const razorpayResponse = await fetch("https://api.razorpay.com/v1/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: "Basic " + Buffer.from(keyId + ":" + keySecret).toString("base64") },
+      body: JSON.stringify({ amount, currency: "INR", receipt, notes: { store: "Kurinji Creations", order_id: savedOrder.id } }),
+      cache: "no-store"
+    });
+    const razorpayOrder = await razorpayResponse.json();
+    if (!razorpayResponse.ok) {
+      await admin.rpc("release_store_loyalty_redemption", { p_order_id: savedOrder.id, p_razorpay_order_id: null });
+      await admin.from("store_orders").delete().eq("id", savedOrder.id);
+      return NextResponse.json({ error: "Unable to start payment. Please try again." }, { status: 502 });
+    }
+
+    const { error: linkError } = await admin.from("store_orders").update({ razorpay_order_id: razorpayOrder.id })
+      .eq("id", savedOrder.id);
+    if (linkError) {
+      await admin.rpc("release_store_loyalty_redemption", { p_order_id: savedOrder.id, p_razorpay_order_id: null });
+      return NextResponse.json({ error: "Payment was created but the order could not be linked. Please contact the store." }, { status: 500 });
     }
 
     if (appliedCoupon) {
       const { data: usageReserved, error: usageError } = await admin.rpc("increment_promo_usage", { p_code: appliedCoupon });
       if (usageError || !usageReserved) {
+        await admin.rpc("release_store_loyalty_redemption", { p_order_id: savedOrder.id, p_razorpay_order_id: razorpayOrder.id });
         await admin.from("store_orders").delete().eq("id", savedOrder.id);
         return NextResponse.json({ error: "This promotion has just reached its usage limit. Please retry without the code." }, { status: 409 });
       }
@@ -112,7 +145,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       orderId: savedOrder.id, orderNumber: savedOrder.order_number,
-      razorpayOrderId: razorpayOrder.id, amount, subtotal, discountPaise, couponCode: appliedCoupon, referralCode: referralCode || null, currency: "INR", keyId
+      razorpayOrderId: razorpayOrder.id, amount, subtotal, discountPaise, loyaltyPointsRedeemed,
+      loyaltyDiscountPaise, couponCode: appliedCoupon, referralCode: referralCode || null, currency: "INR", keyId
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to create checkout.";
