@@ -51,7 +51,7 @@ export default function AccountPage(){
  async function sendPhoneLinkCode(event:React.FormEvent){
   event.preventDefault();setBusy(true);setError("");setNotice("");
   const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
-  if(!/^\\d{10}$/.test(digits)){setError("Enter a valid 10-digit Indian mobile number.");setBusy(false);return;}
+  if(!/^\d{10}$/.test(digits)){setError("Enter a valid 10-digit Indian mobile number.");setBusy(false);return;}
   const {error}=await supabase.auth.updateUser({phone:"+91"+digits});
   if(error)setError(error.message);else{setPhoneLinkOtpSent(true);setNotice("A verification code has been sent to link this mobile number to your Google account.");}
   setBusy(false);
