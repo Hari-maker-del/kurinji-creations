@@ -21,7 +21,16 @@ export async function POST(request: Request) {
 
   try {
     const event = JSON.parse(rawBody);
-    if (event.event === "payment.failed") {\n      const failedPayment = event.payload?.payment?.entity;\n      if (failedPayment?.order_id) {\n        const admin = createAdminClient();\n        const { data: failedOrder } = await admin.from("store_orders").select("id,razorpay_order_id").eq("razorpay_order_id", failedPayment.order_id).maybeSingle();\n        if (failedOrder) await admin.rpc("release_store_loyalty_redemption", { p_order_id: failedOrder.id, p_razorpay_order_id: failedOrder.razorpay_order_id });\n      }\n      return NextResponse.json({ received: true });\n    }\n    if (event.event !== "payment.captured" && event.event !== "order.paid") {
+    if (event.event === "payment.failed") {
+      const failedPayment = event.payload?.payment?.entity;
+      if (failedPayment?.order_id) {
+        const admin = createAdminClient();
+        const { data: failedOrder } = await admin.from("store_orders").select("id,razorpay_order_id").eq("razorpay_order_id", failedPayment.order_id).maybeSingle();
+        if (failedOrder) await admin.rpc("release_store_loyalty_redemption", { p_order_id: failedOrder.id, p_razorpay_order_id: failedOrder.razorpay_order_id });
+      }
+      return NextResponse.json({ received: true });
+    }
+    if (event.event !== "payment.captured" && event.event !== "order.paid") {
       return NextResponse.json({ received: true });
     }
     const payment = event.payload?.payment?.entity;
