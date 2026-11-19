@@ -38,7 +38,7 @@ export default function AdminPage() {
   const [orders, setOrders] = useState<StoreOrder[]>([]);
   const [inventoryHistory, setInventoryHistory] = useState<any[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [tab, setTab] = useState<"overview" | "products" | "categories" | "orders" | "inventory" | "customisations">("overview");
+  const [tab, setTab] = useState<"overview" | "products" | "categories" | "orders" | "inventory" | "customisations" | "customers">("overview");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState<string | null>(null);
@@ -50,6 +50,7 @@ export default function AdminPage() {
   const [orderSearch, setOrderSearch] = useState("");
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [paymentFilter, setPaymentFilter] = useState("all");
+  const [customerSearch, setCustomerSearch] = useState("");
 
   const loadData = useCallback(async () => {
     const [{ data: categoryRows }, { data: productRows }, { data: orderRows }, { data: historyRows }] = await Promise.all([
@@ -192,6 +193,19 @@ export default function AdminPage() {
   const paidRevenue = paidOrders.reduce((sum, order) => sum + (Number(order.subtotal_paise) || 0), 0);
   const recentOrders = [...orders].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).slice(0,5);
   const stockAlerts = products.filter(p=>p.stock_quantity<=5).sort((a,b)=>a.stock_quantity-b.stock_quantity).slice(0,5);
+  const customerProfiles = Object.values(orders.reduce((groups, order) => {
+    const key = (order.phone || order.email || order.customer_name).trim().toLowerCase();
+    const current = groups[key] ?? { key, name: order.customer_name, phone: order.phone, email: order.email, address: order.address, orders: [] as StoreOrder[] };
+    current.orders.push(order);
+    if (new Date(order.created_at).getTime() > new Date(current.orders[0].created_at).getTime()) {
+      current.name = order.customer_name; current.phone = order.phone; current.email = order.email; current.address = order.address;
+    }
+    groups[key] = current;
+    return groups;
+  }, {} as Record<string, {key:string;name:string;phone:string;email:string|null;address:string|null;orders:StoreOrder[]}>))
+    .map(customer => ({ ...customer, paidSpend: customer.orders.filter(order => order.payment_status === "paid").reduce((sum, order) => sum + (Number(order.subtotal_paise) || 0), 0), lastOrder: [...customer.orders].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime())[0] }))
+    .sort((a,b)=>b.paidSpend-a.paidSpend);
+  const filteredCustomers = customerProfiles.filter(customer => [customer.name, customer.phone, customer.email ?? ""].some(value => value.toLowerCase().includes(customerSearch.trim().toLowerCase())));
   const customOrders = orders.filter(order => /(preferred colou?r|custom design|customis|customiz)/i.test(order.customer_note ?? ""));
   const customRequestText = (note: string | null) => (note ?? "").split(/\r?\n/).filter(line => /(preferred colou?r|custom design|customis|customiz)/i.test(line)).join(" · ");
   const filteredOrders = orders.filter(order => {
@@ -225,6 +239,7 @@ export default function AdminPage() {
       <button className={tab==="orders"?"selected":""} onClick={()=>setTab("orders")}><Package size={17}/> Orders <span>{orders.filter(o=>o.status==="new").length}</span></button>
       <button className={tab==="inventory"?"selected":""} onClick={()=>setTab("inventory")}><Box size={17}/> Inventory</button>
       <button className={tab==="customisations"?"selected":""} onClick={()=>setTab("customisations")}><Sparkles size={17}/> Custom requests <span>{customOrders.length}</span></button>
+      <button className={tab==="customers"?"selected":""} onClick={()=>setTab("customers")}><ShoppingBag size={17}/> Customers <span>{customerProfiles.length}</span></button>
       <div className="admin-side-bottom"><div className="admin-user"><div className="admin-avatar">{userEmail.slice(0,1).toUpperCase()}</div><div><strong>Store owner</strong><small>{userEmail}</small></div></div><button onClick={signOut}><LogOut size={16}/> Sign out</button></div>
     </aside>
     <section className="admin-main">
@@ -263,6 +278,11 @@ export default function AdminPage() {
         {tab==="customisations"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">PERSONALISED JEWELLERY</div><h1>Custom requests</h1><p>Review customer colour and design preferences before confirming each order.</p></div><button className="admin-secondary" onClick={()=>void loadData()}><RefreshCw size={14}/> Refresh</button></div>
           {customOrders.length===0?<div className="admin-panel admin-empty"><div className="admin-empty-icon"><Sparkles size={24}/></div><h3>No custom requests yet.</h3><p>When customers submit a colour or design preference through a product page, it will appear here.</p></div>:<div className="admin-custom-request-list">{customOrders.map(order=><article className="admin-panel admin-custom-request" key={order.id}><div className="admin-custom-request-head"><div><div className="admin-eyebrow">ORDER #{order.order_number} · {new Date(order.created_at).toLocaleString("en-IN")}</div><h2>{order.customer_name}</h2><p>{order.phone}{order.email?" · "+order.email:""}</p></div><span className={"admin-status "+(order.status==="new"?"draft":"live")}>{order.status}</span></div><div className="admin-custom-request-products">{(order.items??[]).map((item:any,index:number)=><span key={index}>{item.name} × {item.quantity}</span>)}</div><div className="admin-custom-request-note"><span>REQUESTED PERSONALISATION</span><p>{customRequestText(order.customer_note)||order.customer_note}</p></div>{order.address&&<p className="admin-order-detail"><b>Delivery address:</b> {order.address}</p>}<div className="admin-order-controls"><label>Request / order progress<select value={order.status} onChange={e=>void updateOrderStatus(order,e.target.value as StoreOrder["status"])}><option value="new">New — review request</option><option value="confirmed">Confirmed — options agreed</option><option value="processing">Processing — making piece</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></label><span className="admin-status draft">Payment: {order.payment_status}</span></div></article>)}</div>}
         </>}
+        {tab==="customers"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">CUSTOMER RELATIONSHIPS</div><h1>Customers</h1><p>Understand repeat visits, order history and paid customer value.</p></div><button className="admin-secondary" onClick={()=>void loadData()}><RefreshCw size={14}/> Refresh</button></div>
+          <div className="admin-stat-grid"><article><span><ShoppingBag size={17}/> TOTAL CUSTOMERS</span><strong>{customerProfiles.length}</strong><small>Unique phone / email records</small></article><article><span><BadgeCheck size={17}/> REPEAT CUSTOMERS</span><strong>{customerProfiles.filter(c=>c.orders.length>1).length}</strong><small>More than one order</small></article><article><span><Package size={17}/> PAID CUSTOMERS</span><strong>{customerProfiles.filter(c=>c.paidSpend>0).length}</strong><small>At least one paid order</small></article><article><span><BadgeCheck size={17}/> CUSTOMER VALUE</span><strong>{money(customerProfiles.reduce((sum,c)=>sum+c.paidSpend,0))}</strong><small>Paid order totals in loaded history</small></article></div>
+          <div className="admin-panel"><div className="admin-panel-head"><div><div className="admin-eyebrow">YOUR CUSTOMER BOOK</div><h2>Customer profiles</h2></div><div className="admin-search"><Search size={15}/><input value={customerSearch} onChange={e=>setCustomerSearch(e.target.value)} placeholder="Search name, phone or email"/></div></div>
+            {filteredCustomers.length===0?<div className="admin-empty"><h3>No customers found</h3><p>Customer profiles are created automatically from submitted orders.</p></div>:<div className="admin-customer-list">{filteredCustomers.map(customer=><article className="admin-customer-card" key={customer.key}><div className="admin-customer-head"><div><div className="admin-eyebrow">{customer.orders.length>1?"REPEAT CUSTOMER":"CUSTOMER"}</div><h3>{customer.name}</h3><p>{customer.phone}{customer.email?" · "+customer.email:""}</p></div><strong>{money(customer.paidSpend)}<small>PAID SPEND</small></strong></div><div className="admin-customer-metrics"><span><b>{customer.orders.length}</b> orders</span><span><b>{customer.orders.filter(o=>o.payment_status==="paid").length}</b> paid</span><span>Last order <b>{new Date(customer.lastOrder.created_at).toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"})}</b></span></div>{customer.address&&<p className="admin-order-detail"><b>Latest address:</b> {customer.address}</p>}<details className="admin-customer-history"><summary>View order history</summary><div>{[...customer.orders].sort((a,b)=>new Date(b.created_at).getTime()-new Date(a.created_at).getTime()).map(order=><div key={order.id}><span><b>#{order.order_number}</b> · {new Date(order.created_at).toLocaleDateString("en-IN")} · {order.status} / {order.payment_status}</span><strong>{money(order.subtotal_paise)}</strong><small>{(order.items??[]).map((item:any)=>item.name+" × "+item.quantity).join(", ")}</small></div>)}</div></details></article>)}</div>}
+          </div></>}
         {tab==="categories"&&<><div className="admin-heading-row"><div><div className="admin-eyebrow">SHOP ORGANISATION</div><h1>Categories</h1><p>Keep your collections beautifully organised.</p></div></div><div className="admin-panel"><div className="admin-panel-head"><div><div className="admin-eyebrow">COLLECTION TYPES</div><h2>Manage categories</h2></div></div><form className="admin-add-category" onSubmit={addCategory}><input value={categoryName} onChange={e=>setCategoryName(e.target.value)} placeholder="New category name" required/><button className="admin-primary compact"><Plus size={16}/> Add category</button></form><div className="admin-category-list">{categories.map(c=><div key={c.id}><div className="admin-category-icon"><ShoppingBag size={17}/></div><strong>{c.name}</strong><span className={c.is_active?"admin-status live":"admin-status draft"}>{c.is_active?"Visible":"Hidden"}</span><button className="admin-secondary small" onClick={()=>toggleCategory(c)}>{c.is_active?"Hide":"Show"}</button></div>)}</div></div></>}
       </div>
       <footer className="admin-footer">KURINJI CREATIONS STUDIO <span>Thoughtfully curated. Beautifully managed.</span></footer>
