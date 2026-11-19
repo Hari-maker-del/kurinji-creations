@@ -19,6 +19,7 @@ export async function POST(request: Request) {
     const email = String(body.email ?? "").trim();
     const address = String(body.address ?? "").trim();
     const note = String(body.note ?? "").trim();
+    const couponCode = String(body.couponCode ?? "").trim().toUpperCase().replace(/\\s+/g, "");
     const items = body.items as CheckoutItem[];
 
     if (customerName.length < 2 || customerName.length > 100 || phone.length < 8 || phone.length > 20 ||
@@ -47,7 +48,22 @@ export async function POST(request: Request) {
       }
       return { product_id: product.id, name: product.name, quantity, unit_price_paise: product.price_paise };
     });
-    const amount = orderItems.reduce((sum, item) => sum + item.unit_price_paise * item.quantity, 0);
+    const subtotal = orderItems.reduce((sum, item) => sum + item.unit_price_paise * item.quantity, 0);
+    let discountPaise = 0;
+    let appliedCoupon: string | null = null;
+    if (couponCode) {
+      const { data: promo, error: promoError } = await admin.from("promo_codes").select("*").eq("code", couponCode).maybeSingle();
+      const now = Date.now();
+      if (promoError || !promo || !promo.is_active) return NextResponse.json({ error: "This promotion code is not available." }, { status: 400 });
+      if ((promo.starts_at && new Date(promo.starts_at).getTime() > now) || (promo.ends_at && new Date(promo.ends_at).getTime() < now)) return NextResponse.json({ error: "This promotion is not currently valid." }, { status: 400 });
+      if (promo.usage_limit !== null && promo.usage_count >= promo.usage_limit) return NextResponse.json({ error: "This promotion has reached its usage limit." }, { status: 400 });
+      if (subtotal < Number(promo.min_order_paise || 0)) return NextResponse.json({ error: "Your order does not meet this promotion's minimum value." }, { status: 400 });
+      discountPaise = promo.discount_type === "percent" ? Math.floor(subtotal * Number(promo.discount_value) / 100) : Number(promo.discount_value);
+      if (promo.max_discount_paise !== null) discountPaise = Math.min(discountPaise, Number(promo.max_discount_paise));
+      discountPaise = Math.max(0, Math.min(subtotal, discountPaise));
+      appliedCoupon = promo.code;
+    }
+    const amount = subtotal - discountPaise;
     if (!Number.isSafeInteger(amount) || amount < 100) return NextResponse.json({ error: "Order total must be at least ₹1." }, { status: 400 });
 
     const receipt = "kc_" + Date.now().toString();
@@ -67,7 +83,8 @@ export async function POST(request: Request) {
 
     const { data: savedOrder, error: saveError } = await admin.from("store_orders").insert({
       customer_name: customerName, phone, email: email || null, address: address || null,
-      customer_note: note || null, items: orderItems, subtotal_paise: amount,
+      customer_note: note || null, items: orderItems, subtotal_paise: subtotal,
+      coupon_code: appliedCoupon, discount_paise: discountPaise,
       status: "new", payment_status: "pending", razorpay_order_id: razorpayOrder.id
     }).select("id,order_number").single();
 
@@ -75,9 +92,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Payment was created but the order could not be saved. Please contact the store before retrying." }, { status: 500 });
     }
 
+    if (appliedCoupon) {
+      const { error: usageError } = await admin.from("promo_codes").update({ usage_count: (await admin.from("promo_codes").select("usage_count").eq("code", appliedCoupon).single()).data?.usage_count + 1, updated_at: new Date().toISOString() }).eq("code", appliedCoupon);
+      if (usageError) console.error("Promotion usage counter update failed", usageError.message);
+    }
+
     return NextResponse.json({
       orderId: savedOrder.id, orderNumber: savedOrder.order_number,
-      razorpayOrderId: razorpayOrder.id, amount, currency: "INR", keyId
+      razorpayOrderId: razorpayOrder.id, amount, subtotal, discountPaise, couponCode: appliedCoupon, currency: "INR", keyId
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to create checkout.";
