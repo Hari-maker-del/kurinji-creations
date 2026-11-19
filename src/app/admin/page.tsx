@@ -35,7 +35,7 @@ export default function AdminPage() {
   const [busy, setBusy] = useState(false);
   const [authorized, setAuthorized] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [orders, setOrders] = useState<StoreOrder[]>([]);
+  const [orders, setOrders] = useState<StoreOrder[]>([]);\n  const [inventoryHistory, setInventoryHistory] = useState<any[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [tab, setTab] = useState<"overview" | "products" | "categories" | "orders" | "inventory">("overview");
   const [search, setSearch] = useState("");
@@ -47,14 +47,14 @@ export default function AdminPage() {
   const [categoryName, setCategoryName] = useState("");\n  const [inventoryFilter, setInventoryFilter] = useState<"all" | "in" | "low" | "out">("all");
 
   const loadData = useCallback(async () => {
-    const [{ data: categoryRows }, { data: productRows }, { data: orderRows }] = await Promise.all([
+    const [{ data: categoryRows }, { data: productRows }, { data: orderRows }, { data: historyRows }] = await Promise.all([
       supabase.from("product_categories").select("id,name,slug,is_active").order("sort_order"),
       supabase.from("products").select("*,product_categories(name),product_images(id,image_url,is_primary,sort_order)").order("created_at", { ascending: false }),
       supabase.from("store_orders").select("*").order("created_at", { ascending: false }).limit(100)
     ]);
     setCategories((categoryRows ?? []) as Category[]);
     setProducts((productRows ?? []) as Product[]);
-    setOrders((orderRows ?? []) as StoreOrder[]);
+    setOrders((orderRows ?? []) as StoreOrder[]);\n    setInventoryHistory(historyRows ?? []);
   }, [supabase]);
 
   const verifySession = useCallback(async () => {
