@@ -206,3 +206,15 @@
 .admin-analytics-footnote{font-size:9px;color:#93877a;line-height:1.7;margin:8px 0 0}
 @media(max-width:900px){.admin-analytics-grid{grid-template-columns:1fr}}
 @media(max-width:650px){.admin-chart-bars{gap:5px;height:205px}.admin-chart-column>strong{font-size:7px}.admin-chart-column>small{font-size:7px}.admin-best-sellers>div{grid-template-columns:24px 1fr}.admin-best-sellers small{grid-column:2}}
+
+
+/* Promotion campaign management */
+.admin-promo-form{padding:24px;margin-bottom:18px}
+.admin-promo-list{display:grid;gap:12px}
+.admin-promo-card{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:17px 0;border-top:1px solid #eee8df}
+.admin-promo-card:first-child{border-top:0}
+.admin-promo-card h3{font:24px 'Playfair Display',serif;font-weight:400;margin:6px 0}
+.admin-promo-card p{font-size:10px;color:#74685c;margin:0 0 6px}
+.admin-promo-card small{font-size:9px;color:#93877a;line-height:1.6}
+.admin-promo-card .admin-row-actions{flex-wrap:wrap;justify-content:flex-end}
+@media(max-width:650px){.admin-promo-form{padding:16px}.admin-promo-card{align-items:flex-start;flex-direction:column}.admin-promo-card .admin-row-actions{justify-content:flex-start;width:100%}}
