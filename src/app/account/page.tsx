@@ -57,7 +57,7 @@ export default function AccountPage(){
  async function signInPassword(event:React.FormEvent){
   event.preventDefault();setBusy(true);setError("");setNotice("");
   const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
-  if(!/^\\d{10}$/.test(digits)){setError("Enter a valid 10-digit Indian mobile number.");setBusy(false);return;}
+  if(!/^\d{10}$/.test(digits)){setError("Enter a valid 10-digit Indian mobile number.");setBusy(false);return;}
   const {error}=await supabase.auth.signInWithPassword({phone:"+91"+digits,password});
   if(error)setError(error.message);else{setPassword("");setLoading(true);await loadAccount();}
   setBusy(false);
