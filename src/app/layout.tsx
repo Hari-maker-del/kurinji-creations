@@ -9,8 +9,8 @@ export const metadata: Metadata = {
     google: "xW5wWg01CH9ZW2vRRp03KUCm4L78W4vtl7uutqOwjOU",
   },
   icons: {
-    icon: "/brand/kurinji-flower-emblem.svg",
-    apple: "/brand/kurinji-flower-emblem.svg",
+    icon: "/brand/kurinji-infinity-emblem.svg",
+    apple: "/brand/kurinji-infinity-emblem.svg",
   },
 };
 
