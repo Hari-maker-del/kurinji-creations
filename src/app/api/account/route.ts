@@ -34,7 +34,7 @@ export async function GET() {
       ledger = ledgerRows ?? [];
       referrals = referralRows ?? [];
     }
-    return NextResponse.json({ profile: { name: account?.customer_name ?? mine[0]?.customer_name ?? "", phone: user.phone }, orders: mine, loyalty: account ? { ...account, ledger, referrals } : null });
+    return NextResponse.json({ profile: { name: account?.customer_name ?? mine[0]?.customer_name ?? user.user_metadata?.full_name ?? "", phone: user.phone }, orders: mine, loyalty: account ? { ...account, ledger, referrals } : null });
   } catch {
     return NextResponse.json({ error: "Unable to load your account." }, { status: 500 });
   }
