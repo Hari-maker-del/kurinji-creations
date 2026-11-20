@@ -242,3 +242,25 @@
 .kc-google-signin:disabled{opacity:.55;cursor:wait}
 .kc-login-divider{display:flex;align-items:center;gap:12px;color:#a1988d;font-size:8px;letter-spacing:.15em;margin:0 0 20px}
 .kc-login-divider:before,.kc-login-divider:after{content:"";height:1px;background:#e8e1d8;flex:1}
+
+
+/* Product detail — premium gallery, zoom and custom reference upload */
+.detail-zoom-trigger{display:block;width:100%;padding:0;border:0;cursor:zoom-in;text-align:inherit;position:relative;background:#eee8df}
+.detail-zoom-trigger>img{display:block;width:100%;height:100%;object-fit:cover;transition:transform .45s ease}
+.detail-zoom-trigger:hover>img{transform:scale(1.025)}
+.detail-zoom-hint{position:absolute;right:15px;bottom:15px;display:flex;align-items:center;gap:7px;padding:10px 12px;background:rgba(255,253,249,.94);color:#40372e;font-size:8px;letter-spacing:1.3px}
+.detail-lightbox{position:fixed;inset:0;z-index:1000;background:rgba(18,17,16,.94);display:flex;align-items:center;justify-content:center;padding:54px 24px 70px;flex-direction:column;gap:15px}
+.detail-lightbox>img{display:block;max-width:min(88vw,1000px);max-height:82vh;width:auto;height:auto;object-fit:contain}
+.detail-lightbox>button{position:absolute;right:24px;top:20px;width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff}
+.detail-lightbox>span{color:#e9dfd3;font-size:9px;letter-spacing:1.6px}
+.detail-reference-upload{display:grid;gap:8px;margin-top:14px;font-size:11px}
+.detail-reference-upload input{width:100%;padding:12px;border:1px dashed #cbbca9;background:#faf8f4;font-size:11px}
+.detail-reference-upload small{font-size:9px;color:#85796b}
+.detail-customize [role=status]{display:block;color:#58704f;font-size:10px;margin-top:8px}
+.kc-checkout-steps{display:flex;align-items:center;gap:12px;max-width:470px;margin:0 0 28px;color:#9a9187;font-size:8px;letter-spacing:1.1px}
+.kc-checkout-steps span{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.kc-checkout-steps i{width:23px;height:23px;border:1px solid #d8cfc4;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:9px}
+.kc-checkout-steps span.active{color:#8a6747}
+.kc-checkout-steps span.active i{border-color:#a77d58;background:#a77d58;color:white}
+.kc-checkout-steps>b{height:1px;flex:1;background:#ded7ce}
+@media(max-width:480px){.detail-lightbox{padding:55px 12px}.detail-lightbox>img{max-width:96vw;max-height:75vh}.kc-checkout-steps{gap:7px;font-size:7px;letter-spacing:.5px}}
