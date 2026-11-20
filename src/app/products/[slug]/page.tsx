@@ -3,7 +3,7 @@ import {useEffect,useMemo,useState} from "react";
 import {createClient} from "@/lib/supabase/client";
 import Link from "next/link";
 import {useParams,useRouter} from "next/navigation";
-import {ArrowLeft,ArrowRight,Heart,Minus,Plus,MessageCircle,ShieldCheck,PackageCheck,Truck,ShoppingBag} from "lucide-react";
+import {ArrowLeft,ArrowRight,Heart,Minus,Plus,MessageCircle,ShieldCheck,PackageCheck,Truck,ShoppingBag,X,ZoomIn} from "lucide-react";
 
 type RazorpaySuccess={razorpay_order_id:string;razorpay_payment_id:string;razorpay_signature:string};
 declare global { interface Window { Razorpay?: new (options:any)=>{open:()=>void}; } }
@@ -19,7 +19,7 @@ export default function ProductPage(){
  const router=useRouter();
  const params=useParams<{slug:string}>(),initialProduct=catalogue.find(p=>p.id===params.slug||p.slug===params.slug)??catalogue[0];
  const [product,setProduct]=useState<ProductDetail>(initialProduct);
- const [photo,setPhoto]=useState(0),[qty,setQty]=useState(1),[saved,setSaved]=useState(false),[customColour,setCustomColour]=useState(""),[customRequest,setCustomRequest]=useState("");
+ const [photo,setPhoto]=useState(0),[qty,setQty]=useState(1),[saved,setSaved]=useState(false),[customColour,setCustomColour]=useState(""),[customRequest,setCustomRequest]=useState(""),[lightboxOpen,setLightboxOpen]=useState(false),[referenceUrl,setReferenceUrl]=useState(""),[referenceBusy,setReferenceBusy]=useState(false),[referenceMessage,setReferenceMessage]=useState("");
  const [customerName,setCustomerName]=useState(""),[customerPhone,setCustomerPhone]=useState(""),[customerEmail,setCustomerEmail]=useState(""),[customerAddress,setCustomerAddress]=useState(""),[customerNote,setCustomerNote]=useState("");
  const [submitting,setSubmitting]=useState(false),[orderMessage,setOrderMessage]=useState("");
  useEffect(()=>{
@@ -34,7 +34,7 @@ export default function ProductPage(){
    setPhoto(0);setQty(1);
   });
  },[params.slug]);
- const orderText=encodeURIComponent("Hello Kurinji Creations! I would like to enquire about "+product.name+" (Qty: "+qty+")."+(customColour?" Preferred colour: "+customColour+".":"")+(customRequest?" Custom request: "+customRequest+".":"")+" Please confirm availability, customisation and delivery details.");
+ async function uploadReference(file?:File){\n  if(!file)return;setReferenceBusy(true);setReferenceMessage("");\n  const form=new FormData();form.append("file",file);\n  try{const response=await fetch("/api/customisation-reference",{method:"POST",body:form});const result=await response.json();if(!response.ok)throw new Error(result.error||"Upload failed.");setReferenceUrl(result.url);setReferenceMessage("Reference image attached successfully.");}\n  catch(error){setReferenceMessage(error instanceof Error?error.message:"Unable to upload image.");}\n  finally{setReferenceBusy(false);}\n }\n const orderText=encodeURIComponent("Hello Kurinji Creations! I would like to enquire about "+product.name+" (Qty: "+qty+")."+(customColour?" Preferred colour: "+customColour+".":"")+(customRequest?" Custom request: "+customRequest+".":"")+" Please confirm availability, customisation and delivery details.");
 
  async function startRazorpayPayment(){
   if(!customerName.trim()||customerPhone.trim().length<8){setOrderMessage("Please enter your name and phone number first.");return;}
@@ -63,7 +63,7 @@ export default function ProductPage(){
   <header className="container detail-header"><Link href="/shop" className="back-link"><ArrowLeft size={17}/> <span>BACK TO SHOP</span></Link><Link href="/shop" className="brand kc-detail-logo" aria-label="Kurinji Creations"><img src="/brand/kurinji-header-logo.svg" alt="Kurinji Creations"/></Link><span className="detail-header-note">THE LITTLE DETAILS</span></header>
   <div className="container detail-layout">
    <section className="detail-gallery">
-    <div className="detail-main-photo"><img src={product.images[photo]||catalogue[0].images[0]} alt={product.name+" jewellery view"}/><span className="detail-photo-tag">{product.tag||"CURATED FOR YOU"}</span></div>
+    <button type="button" className="detail-main-photo detail-zoom-trigger" onClick={()=>setLightboxOpen(true)} aria-label="Enlarge product image"><img src={product.images[photo]||catalogue[0].images[0]} alt={product.name+" jewellery view"}/><span className="detail-photo-tag">{product.tag||"CURATED FOR YOU"}</span><span className="detail-zoom-hint"><ZoomIn size={15}/> VIEW DETAIL</span></button>
     <div className="detail-thumbs">{(product.images.length?product.images:catalogue[0].images).map((src,i)=><button key={src+i} className={photo===i?"selected":""} onClick={()=>setPhoto(i)} aria-label={"View product image "+(i+1)}><img src={src} alt=""/></button>)}</div>
    </section>
    <section className="detail-info">
@@ -76,7 +76,7 @@ export default function ProductPage(){
     <div className="detail-spec"><span>PRODUCT TYPE</span><strong>{product.category}</strong></div>
     <div className="detail-spec"><span>MATERIAL</span><strong>{product.material}</strong></div>
     <div className="detail-rule"/>
-    {product.allowsCustomization&&<div className="detail-customize"><div className="kicker">MAKE IT YOURS</div><h2>Personalise this piece</h2><p>{product.customizationNotes||"Ask us about available colour and design options."}</p><label>Preferred colour or charm<input value={customColour} onChange={e=>setCustomColour(e.target.value)} placeholder="e.g. lavender, rose pink, blue"/></label><label>Any other design request<textarea value={customRequest} onChange={e=>setCustomRequest(e.target.value)} rows={3} placeholder="Tell us how you would like your piece customised…"/></label><small>We’ll confirm available options with you before accepting the order.</small></div>}
+    {product.allowsCustomization&&<div className="detail-customize"><div className="kicker">MAKE IT YOURS</div><h2>Personalise this piece</h2><p>{product.customizationNotes||"Ask us about available colour and design options."}</p><label>Preferred colour or charm<input value={customColour} onChange={e=>setCustomColour(e.target.value)} placeholder="e.g. lavender, rose pink, blue"/></label><label>Any other design request<textarea value={customRequest} onChange={e=>setCustomRequest(e.target.value)} rows={3} placeholder="Tell us how you would like your piece customised…"/></label><label className="detail-reference-upload">Reference photo (optional)<input type="file" accept="image/jpeg,image/png,image/webp" disabled={referenceBusy} onChange={e=>void uploadReference(e.target.files?.[0])}/><small>JPG, PNG or WebP · Maximum 5 MB</small></label>{referenceMessage&&<small role="status">{referenceMessage}</small>}<small>We’ll confirm available options with you before accepting the order.</small></div>}
     <div className="detail-stock" aria-live="polite">{product.stock<=0?<strong className="detail-stock-out">Sold out</strong>:product.stock<=3?<strong className="detail-stock-low">Only {product.stock} left — order soon</strong>:<strong className="detail-stock-in">In stock · {product.stock} available</strong>}</div><div className="quantity-label">QUANTITY</div>
     <div className="quantity-control"><button disabled={product.stock<=0||qty<=1} onClick={()=>setQty(q=>Math.max(1,q-1))} aria-label="Decrease quantity"><Minus size={15}/></button><span>{qty}</span><button disabled={product.stock<=0||qty>=Math.min(10,product.stock)} onClick={()=>setQty(q=>Math.min(10,product.stock,q+1))} aria-label="Increase quantity"><Plus size={15}/></button></div>
     <button disabled={product.stock<=0} className="primary-button detail-order" type="button" style={{width:"100%",marginTop:14}} onClick={()=>{const key="kurinji_cart_v1";let ids:string[]=[];try{const parsed=JSON.parse(localStorage.getItem(key)||"[]");if(Array.isArray(parsed))ids=parsed.filter((x):x is string=>typeof x==="string");}catch{}const already=ids.filter(id=>id===product.id).length;if(already+qty>product.stock){setOrderMessage("Only "+product.stock+" available. Your bag already has "+already+".");return;}localStorage.setItem(key,JSON.stringify([...ids,...Array(qty).fill(product.id)]));setOrderMessage("Added to your shopping bag.");}}>ADD TO BAG <ShoppingBag size={15}/></button>
@@ -99,6 +99,6 @@ export default function ProductPage(){
   </div>
   <section className="container related-section"><div className="kicker">MORE TO LOVE</div><h2 className="section-title">You may also like</h2><div className="related-grid">{related.map(p=><Link href={"/products/"+(p.slug||p.id)} key={p.id} className="related-card"><img src={p.images[0]} alt={p.name}/><span>{p.name}</span><strong>{money(p.price)}</strong></Link>)}</div></section>
   <footer className="container footer detail-footer"><div style={{textAlign:"center"}}><div className="brand kc-detail-footer-logo"><img src="/brand/kurinji-header-logo.svg" alt="Kurinji Creations"/></div><p className="detail-footer-note">ELEGANCE IN EVERY DETAIL</p><Link href="/shop" className="text-link">CONTINUE SHOPPING</Link></div></footer>
-  <a href={"https://wa.me/?text="+encodeURIComponent("Hello Kurinji Creations! I have a question about your jewellery.")} target="_blank" rel="noreferrer" className="detail-whatsapp" aria-label="Chat on WhatsApp"><MessageCircle size={21}/></a>
+  {lightboxOpen&&<div className="detail-lightbox" role="dialog" aria-modal="true" aria-label="Product image preview" onClick={()=>setLightboxOpen(false)}><button type="button" onClick={()=>setLightboxOpen(false)} aria-label="Close image preview"><X size={22}/></button><img src={product.images[photo]||catalogue[0].images[0]} alt={product.name+" enlarged view"} onClick={e=>e.stopPropagation()}/><span>{product.name} · IMAGE {photo+1} OF {(product.images.length||catalogue[0].images.length)}</span></div>}\n  <a href={"https://wa.me/?text="+encodeURIComponent("Hello Kurinji Creations! I have a question about your jewellery.")} target="_blank" rel="noreferrer" className="detail-whatsapp" aria-label="Chat on WhatsApp"><MessageCircle size={21}/></a>
  </main>;
 }
