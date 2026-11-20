@@ -264,3 +264,21 @@
 .kc-checkout-steps span.active i{border-color:#a77d58;background:#a77d58;color:white}
 .kc-checkout-steps>b{height:1px;flex:1;background:#ded7ce}
 @media(max-width:480px){.detail-lightbox{padding:55px 12px}.detail-lightbox>img{max-width:96vw;max-height:75vh}.kc-checkout-steps{gap:7px;font-size:7px;letter-spacing:.5px}}
+
+
+/* Homepage screenshot corrections — prevent hero footer/action overlap */
+.kc-header{height:140px;min-height:140px}
+.kc-header .kc-master-logo{width:112px;height:130px;flex:0 0 112px}
+.kc-brand-hero{padding-bottom:48px}
+.kc-brand-hero-foot{position:static;left:auto;bottom:auto;margin-top:36px;display:flex;flex-wrap:wrap;gap:4px 12px;line-height:1.8}
+.kc-brand-hero-image>img{object-position:center 64%}
+@media(max-width:900px){
+ .kc-header{height:132px;min-height:132px}
+ .kc-header .kc-master-logo{width:100px;height:116px;flex-basis:100px}
+}
+@media(max-width:760px){
+ .kc-header{height:auto;min-height:108px;padding:6px 14px}
+ .kc-header .kc-master-logo{width:86px;height:100px;flex-basis:86px}
+ .kc-brand-hero-foot{position:static;margin-top:28px;gap:4px 8px}
+ .kc-brand-hero-image>img{object-position:center 62%}
+}
