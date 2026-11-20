@@ -67,6 +67,7 @@ export default function AccountPage(){
  async function sendOtp(event:React.FormEvent){
   event.preventDefault();setBusy(true);setError("");setNotice("");
   const digits=phone.replace(/[^0-9]/g,"").replace(/^0/,"");
+  if(loginMode==="signup"&&!signupName.trim()){setError("Enter your name to create an account.");setBusy(false);return;}
   if(!/^\d{10}$/.test(digits)){setError("Enter a valid 10-digit Indian mobile number.");setBusy(false);return;}
   const {error}=await supabase.auth.signInWithOtp({phone:"+91"+digits,options:{shouldCreateUser:true,data:loginMode==="signup"?{full_name:signupName.trim()}:undefined}});
   if(error)setError(error.message);else{setOtpSent(true);setNotice("A verification code has been sent to your mobile.");}
