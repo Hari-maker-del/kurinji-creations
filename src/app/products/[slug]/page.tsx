@@ -40,7 +40,7 @@ export default function ProductPage(){
   if(!customerName.trim()||customerPhone.trim().length<8){setOrderMessage("Please enter your name and phone number first.");return;}
   setSubmitting(true);setOrderMessage("");
   try{
-   const response=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName,phone:customerPhone,email:customerEmail,address:customerAddress,note:[customerNote,customColour?"Preferred colour/charm: "+customColour:"",customRequest?"Custom design: "+customRequest:""].filter(Boolean).join("\n"),items:[{productId:product.id,quantity:qty}]})});
+   const response=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName,phone:customerPhone,email:customerEmail,address:customerAddress,note:[customerNote,customColour?"Preferred colour/charm: "+customColour:"",customRequest?"Custom design: "+customRequest:"",referenceUrl?"Reference image: "+referenceUrl:""].filter(Boolean).join("\n"),items:[{productId:product.id,quantity:qty}]})});
    const order=await response.json();
    if(!response.ok)throw new Error(order.error||"Unable to start secure checkout.");
    if(!window.Razorpay){
