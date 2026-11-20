@@ -282,3 +282,52 @@
  .kc-brand-hero-foot{position:static;margin-top:28px;gap:4px 8px}
  .kc-brand-hero-image>img{object-position:center 62%}
 }
+
+
+/* Brand-wide button language: softer, quieter and less boxy */
+.kc-button,
+.kc-header-cta,
+.primary-button,
+.detail-order,
+.add-small,
+button[type="submit"],
+.kc-account-login button,
+.kc-password-panel button,
+.kc-checkout button,
+.checkout-page button,
+.admin-page button{
+  border-radius:999px;
+  box-shadow:none;
+  transition:background-color .22s ease,color .22s ease,border-color .22s ease,transform .22s ease;
+}
+.kc-button,
+.kc-header-cta{
+  padding:14px 24px;
+  letter-spacing:1.35px;
+}
+.kc-button{background:#a77d58;color:#fff}
+.kc-button:hover,.kc-header-cta:hover{background:#8c6849;transform:translateY(-1px)}
+.kc-header-cta{background:transparent;color:#8b694b;border:1px solid #b99a79}
+.kc-header-cta:hover{color:#fff;border-color:#8c6849}
+.primary-button,.detail-order{
+  border-radius:999px;
+  background:#302820;
+  border:1px solid #302820;
+  padding:14px 25px;
+}
+.primary-button.light{background:transparent;color:#302820;border-color:#b9a58e}
+.add-small{
+  background:transparent;
+  border:0;
+  border-bottom:1px solid #c8b59e;
+  border-radius:0;
+  padding:12px 2px;
+  letter-spacing:1.35px;
+}
+.add-small:hover{color:#98724f;border-color:#98724f;background:transparent}
+.detail-wish{border-radius:50%;border-color:#d9cfc3}
+.kc-button:focus-visible,.kc-header-cta:focus-visible,.primary-button:focus-visible,.add-small:focus-visible,button:focus-visible{outline:2px solid #a77d58;outline-offset:4px}
+button:disabled,.kc-button[aria-disabled="true"]{opacity:.55;cursor:not-allowed;transform:none}
+@media(max-width:760px){
+ .kc-button,.kc-header-cta{padding:13px 19px;font-size:9px}
+}
