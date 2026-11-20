@@ -51,7 +51,7 @@ export default function Home() {
       <footer className="kc-footer">
         <Link href="/" className="kc-logo-link kc-master-logo kc-footer-master-logo" aria-label="Kurinji Creations home"><img src={logo} alt="Kurinji Creations — Handcrafted Jewellery"/></Link>
         <p>Little details. Lasting charm.</p>
-        <div><Link href="/about">OUR STORY</Link><Link href="/shop">VISIT STORE</Link><Link href="/about#contact">CONTACT</Link><Link href="/account">MY ACCOUNT</Link><a href="https://www.instagram.com/" target="_blank" rel="noreferrer">INSTAGRAM</a><a href="https://wa.me/919345858353" target="_blank" rel="noreferrer">WHATSAPP</a></div>
+        <div><Link href="/about">OUR STORY</Link><Link href="/shop">VISIT STORE</Link><Link href="/about#contact">CONTACT</Link><Link href="/account">MY ACCOUNT</Link><a href="https://www.instagram.com/kurinji_creations_/" target="_blank" rel="noreferrer">INSTAGRAM</a><a href="https://wa.me/919345858353" target="_blank" rel="noreferrer">WHATSAPP</a></div>
         <small>© {new Date().getFullYear()} KURINJI CREATIONS · HANDCRAFTED JEWELLERY</small>
       </footer>
     </main>
