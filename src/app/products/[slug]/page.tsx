@@ -60,7 +60,7 @@ export default function ProductPage(){
  const related=useMemo(()=>catalogue.filter(p=>p.id!==product.id).slice(0,3),[product.id]);
  return <main className="detail-page">
   <div className="promo">A LITTLE SOMETHING LOVELY · KURINJI CREATIONS</div>
-  <header className="container detail-header"><Link href="/shop" className="back-link"><ArrowLeft size={17}/> <span>BACK TO SHOP</span></Link><Link href="/shop" className="brand kc-detail-logo" aria-label="Kurinji Creations"><img src="/brand/kurinji-header-logo.svg" alt="Kurinji Creations"/></Link><span className="detail-header-note">THE LITTLE DETAILS</span></header>
+  <header className="container detail-header"><Link href="/shop" className="back-link"><ArrowLeft size={17}/> <span>BACK TO SHOP</span></Link><Link href="/shop" className="brand kc-detail-logo" aria-label="Kurinji Creations"><img src="/brand/IMG-20261119-WA0000.jpg.jpeg" alt="Kurinji Creations"/></Link><span className="detail-header-note">THE LITTLE DETAILS</span></header>
   <div className="container detail-layout">
    <section className="detail-gallery">
     <button type="button" className="detail-main-photo detail-zoom-trigger" onClick={()=>setLightboxOpen(true)} aria-label="Enlarge product image"><img src={product.images[photo]||catalogue[0].images[0]} alt={product.name+" jewellery view"}/><span className="detail-photo-tag">{product.tag||"CURATED FOR YOU"}</span><span className="detail-zoom-hint"><ZoomIn size={15}/> VIEW DETAIL</span></button>
@@ -98,7 +98,7 @@ export default function ProductPage(){
    </section>
   </div>
   <section className="container related-section"><div className="kicker">MORE TO LOVE</div><h2 className="section-title">You may also like</h2><div className="related-grid">{related.map(p=><Link href={"/products/"+(p.slug||p.id)} key={p.id} className="related-card"><img src={p.images[0]} alt={p.name}/><span>{p.name}</span><strong>{money(p.price)}</strong></Link>)}</div></section>
-  <footer className="container footer detail-footer"><div style={{textAlign:"center"}}><div className="brand kc-detail-footer-logo"><img src="/brand/kurinji-header-logo.svg" alt="Kurinji Creations"/></div><p className="detail-footer-note">ELEGANCE IN EVERY DETAIL</p><Link href="/shop" className="text-link">CONTINUE SHOPPING</Link></div></footer>
+  <footer className="container footer detail-footer"><div style={{textAlign:"center"}}><div className="brand kc-detail-footer-logo"><img src="/brand/IMG-20261119-WA0000.jpg.jpeg" alt="Kurinji Creations"/></div><p className="detail-footer-note">ELEGANCE IN EVERY DETAIL</p><Link href="/shop" className="text-link">CONTINUE SHOPPING</Link></div></footer>
   {lightboxOpen&&<div className="detail-lightbox" role="dialog" aria-modal="true" aria-label="Product image preview" onClick={()=>setLightboxOpen(false)}><button type="button" onClick={()=>setLightboxOpen(false)} aria-label="Close image preview"><X size={22}/></button><img src={product.images[photo]||catalogue[0].images[0]} alt={product.name+" enlarged view"} onClick={e=>e.stopPropagation()}/><span>{product.name} · IMAGE {photo+1} OF {(product.images.length||catalogue[0].images.length)}</span></div>}\n  <a href={"https://wa.me/?text="+encodeURIComponent("Hello Kurinji Creations! I have a question about your jewellery.")} target="_blank" rel="noreferrer" className="detail-whatsapp" aria-label="Chat on WhatsApp"><MessageCircle size={21}/></a>
  </main>;
 }
