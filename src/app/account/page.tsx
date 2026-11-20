@@ -33,6 +33,7 @@ export default function AccountPage(){
  const [notice,setNotice]=useState("");
  const [data,setData]=useState<AccountData|null>(null);
  const loadAccount=useCallback(async()=>{
+  if(typeof window!=="undefined"&&new URLSearchParams(window.location.search).get("auth_error")==="google_callback")setError("Google sign-in could not be completed. Please try again, or use mobile verification.");
   const {data:{user}}=await supabase.auth.getUser();
   if(!user){setData(null);setGoogleNeedsPhone(false);setLoading(false);return;}
   if(!user.phone){setData(null);setGoogleNeedsPhone(Boolean(user.email));setLoading(false);return;}
@@ -46,7 +47,7 @@ export default function AccountPage(){
  useEffect(()=>{void loadAccount();},[loadAccount]);
  async function signInWithGoogle(){
   setBusy(true);setError("");
-  const {error}=await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin+"/account"} });
+  const {error}=await supabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:window.location.origin+"/auth/callback?next=/account"} });
   if(error){setError(error.message);setBusy(false);}
  }
  async function sendPhoneLinkCode(event:React.FormEvent){
