@@ -34,7 +34,14 @@ export default function ProductPage(){
    setPhoto(0);setQty(1);
   });
  },[params.slug]);
- async function uploadReference(file?:File){\n  if(!file)return;setReferenceBusy(true);setReferenceMessage("");\n  const form=new FormData();form.append("file",file);\n  try{const response=await fetch("/api/customisation-reference",{method:"POST",body:form});const result=await response.json();if(!response.ok)throw new Error(result.error||"Upload failed.");setReferenceUrl(result.url);setReferenceMessage("Reference image attached successfully.");}\n  catch(error){setReferenceMessage(error instanceof Error?error.message:"Unable to upload image.");}\n  finally{setReferenceBusy(false);}\n }\n const orderText=encodeURIComponent("Hello Kurinji Creations! I would like to enquire about "+product.name+" (Qty: "+qty+")."+(customColour?" Preferred colour: "+customColour+".":"")+(customRequest?" Custom request: "+customRequest+".":"")+" Please confirm availability, customisation and delivery details.");
+ async function uploadReference(file?:File){
+  if(!file)return;setReferenceBusy(true);setReferenceMessage("");
+  const form=new FormData();form.append("file",file);
+  try{const response=await fetch("/api/customisation-reference",{method:"POST",body:form});const result=await response.json();if(!response.ok)throw new Error(result.error||"Upload failed.");setReferenceUrl(result.url);setReferenceMessage("Reference image attached successfully.");}
+  catch(error){setReferenceMessage(error instanceof Error?error.message:"Unable to upload image.");}
+  finally{setReferenceBusy(false);}
+ }
+ const orderText=encodeURIComponent("Hello Kurinji Creations! I would like to enquire about "+product.name+" (Qty: "+qty+")."+(customColour?" Preferred colour: "+customColour+".":"")+(customRequest?" Custom request: "+customRequest+".":"")+" Please confirm availability, customisation and delivery details.");
 
  async function startRazorpayPayment(){
   if(!customerName.trim()||customerPhone.trim().length<8){setOrderMessage("Please enter your name and phone number first.");return;}
