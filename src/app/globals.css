@@ -331,3 +331,25 @@ button:disabled,.kc-button[aria-disabled="true"]{opacity:.55;cursor:not-allowed;
 @media(max-width:760px){
  .kc-button,.kc-header-cta{padding:13px 19px;font-size:9px}
 }
+
+
+/* Customer rewards dashboard — tier progress, sharing and referral activity */
+.kc-tier-progress{margin:20px 0 22px;padding:17px 18px;background:rgba(255,255,255,.38);border:1px solid rgba(255,255,255,.35)}
+.kc-tier-progress>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.kc-tier-progress>div:first-child span{font-size:8px;letter-spacing:1.4px;color:#8b694b}
+.kc-tier-progress>div:first-child b{font-size:10px;font-weight:500;color:#4c4035}
+.kc-tier-track{height:5px;background:rgba(89,70,52,.15);overflow:hidden}
+.kc-tier-track i{display:block;height:100%;background:#a77d58;transition:width .35s ease}
+.kc-tier-progress>small{display:block;font-size:9px;color:#74685c;margin-top:9px;line-height:1.6}
+.kc-referral-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.kc-referral-actions button{border:1px solid #cdb99f;background:transparent;color:#6d5138;padding:9px 12px;font-size:8px;letter-spacing:1px;cursor:pointer}
+.kc-referral-actions button:hover{background:#302820;border-color:#302820;color:#fff}
+.kc-loyalty-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:19px 0}
+.kc-loyalty-facts>div{padding:13px 15px;border:1px solid rgba(255,255,255,.38);background:rgba(255,255,255,.25)}
+.kc-loyalty-facts strong,.kc-loyalty-facts small{display:block}
+.kc-loyalty-facts strong{font:25px 'Italiana',serif;color:#302820}
+.kc-loyalty-facts small{font-size:7px;letter-spacing:1.2px;color:#74685c;margin-top:5px}
+.kc-rewards-shop-link{display:inline-flex;align-items:center;gap:10px;margin-top:15px;color:#6d5138;text-decoration:none;font-size:8px;letter-spacing:1.3px;border-bottom:1px solid #b99a79;padding-bottom:6px}
+.kc-rewards-shop-link span{font-size:15px}
+.kc-referral-history{margin-top:26px}
+@media(max-width:560px){.kc-tier-progress{padding:14px}.kc-tier-progress>div:first-child{align-items:flex-start;flex-direction:column;gap:6px}.kc-loyalty-facts strong{font-size:22px}.kc-referral-actions{width:100%}.kc-referral-actions button{flex:1}}
