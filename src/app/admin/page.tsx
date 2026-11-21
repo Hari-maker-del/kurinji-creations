@@ -183,8 +183,22 @@ export default function AdminPage() {
   }
 
   async function updateOrderStatus(order: StoreOrder, status: StoreOrder["status"]) {
-    const { error } = await supabase.from("store_orders").update({ status }).eq("id", order.id);
-    if (error) setNotice(error.message); else { setNotice(`Order #${order.order_number} updated.`); await loadData(); }
+    setBusy(true);
+    try {
+      const response = await fetch(`/api/admin/orders/${order.id}/status`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status })
+      });
+      const result = await response.json();
+      if (!response.ok) setNotice(result.error || "Unable to update order.");
+      else {
+        setNotice(result.notification?.sent
+          ? `Order #${order.order_number} updated and customer emailed.`
+          : `Order #${order.order_number} updated. Customer email was not sent (check notification setup/history).`);
+        await loadData();
+      }
+    } catch {
+      setNotice("Unable to update order. Please try again.");
+    } finally { setBusy(false); }
   }
 
   async function savePromotion(event: FormEvent) {
