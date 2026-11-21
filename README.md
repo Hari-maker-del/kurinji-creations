@@ -39,11 +39,11 @@ A dedicated Supabase project is now provisioned for this store in Singapore.
 
 The schema is already applied. To reproduce it in another dedicated project, run `supabase/setup/catalogue.sql` in the Supabase SQL Editor.
 
-The storefront reads active products from Supabase and product detail pages look up products by slug. Until real products are entered and activated, the original sample catalogue remains as a clearly labelled preview.
+The storefront reads active products from Supabase and product detail pages look up products by slug. If no active products are available, the shop displays a collection-coming-soon message rather than fabricated sample products or stock.
 
-To grant store-owner access, create the owner's account in Supabase Auth and assign `store_role: admin` in trusted **app_metadata** (never user_metadata), then have the owner sign out and back in to refresh the JWT. Only store admins can write catalogue records or upload product images.
+Store-owner access is managed through the `public.store_admins` table. Add the owner's Supabase Auth user UUID to `store_admins` after the account is created. The application admin dashboard and its server-side admin APIs check this table. Do not use editable `user_metadata` for authorization. The current app does not use `app_metadata.store_role` as its admin source of truth.
 
-The schema creates categories, products, and product images with Row Level Security. Public visitors can read active catalogue items; only a user whose trusted app metadata contains `store_role=admin` can manage catalogue records.
+The schema creates categories, products, and product images with Row Level Security. Public visitors can read active catalogue items; catalogue write policies must authorize the store-owner accounts registered in `public.store_admins`.
 
 **Important:** The four products currently shown on the website are design placeholders, not verified inventory. Replace their names, prices, photos, materials, and stock quantities with the shop owner's actual catalogue before accepting orders. Do not put a Supabase secret/service-role key in any `NEXT_PUBLIC_*` variable or browser code.
 
