@@ -16,23 +16,36 @@ function escapeHtml(value: unknown) {
   return String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]!);
 }
 
-export async function sendOrderNotification(admin: SupabaseClient, orderId: string, eventType: NotificationEvent) {
+export async function sendOrderNotification(admin: SupabaseClient, orderId: string, eventType: NotificationEvent, retryEventId?: string) {
   const { data: order, error: orderError } = await admin.from("store_orders")
     .select("id,order_number,customer_name,email,phone,items,subtotal_paise,discount_paise,loyalty_discount_paise,status,payment_status")
     .eq("id", orderId).maybeSingle();
   if (orderError || !order) throw new Error("Could not load order for customer notification.");
 
   const recipient = typeof order.email === "string" ? order.email.trim() : "";
-  const { data: event, error: insertError } = await admin.from("store_notification_events")
-    .insert({ order_id: order.id, event_type: eventType, recipient_email: recipient || null, delivery_status: "pending" })
-    .select("id").single();
-
-  // A unique order/event key makes webhook retries and browser verification idempotent.
-  if (insertError?.code === "23505") return { sent: false, duplicate: true };
-  if (insertError || !event) throw new Error("Could not record customer notification.");
+  let eventId = retryEventId;
+  if (retryEventId) {
+    const { data: existing, error: existingError } = await admin.from("store_notification_events")
+      .select("id,order_id,event_type,delivery_status").eq("id", retryEventId).maybeSingle();
+    if (existingError || !existing || existing.order_id !== order.id || existing.event_type !== eventType || existing.delivery_status === "sent") {
+      throw new Error("This notification cannot be retried.");
+    }
+    const { error: resetError } = await admin.from("store_notification_events").update({
+      delivery_status: "pending", recipient_email: recipient || null, error_message: null
+    }).eq("id", retryEventId);
+    if (resetError) throw new Error("Could not prepare notification retry.");
+  } else {
+    const { data: event, error: insertError } = await admin.from("store_notification_events")
+      .insert({ order_id: order.id, event_type: eventType, recipient_email: recipient || null, delivery_status: "pending" })
+      .select("id").single();
+    // A unique order/event key makes webhook retries and browser verification idempotent.
+    if (insertError?.code === "23505") return { sent: false, duplicate: true };
+    if (insertError || !event) throw new Error("Could not record customer notification.");
+    eventId = event.id;
+  }
 
   if (!recipient) {
-    await admin.from("store_notification_events").update({ delivery_status: "skipped", error_message: "Customer email address was not provided." }).eq("id", event.id);
+    await admin.from("store_notification_events").update({ delivery_status: "skipped", error_message: "Customer email address was not provided." }).eq("id", eventId);
     return { sent: false, skipped: true };
   }
 
@@ -65,4 +78,14 @@ export async function sendOrderNotification(admin: SupabaseClient, orderId: stri
     await admin.from("store_notification_events").update({ delivery_status: "failed", error_message: message.slice(0, 500) }).eq("id", event.id);
     return { sent: false, failed: true };
   }
+}
+
+export async function retryOrderNotification(admin: SupabaseClient, eventId: string) {
+  const { data: event, error } = await admin.from("store_notification_events")
+    .select("id,order_id,event_type,delivery_status").eq("id", eventId).maybeSingle();
+  if (error || !event) throw new Error("Notification not found.");
+  if (event.delivery_status === "sent") throw new Error("This notification was already sent.");
+  const allowed: NotificationEvent[] = ["order_received", "payment_confirmed", "order_confirmed", "order_processing", "order_shipped", "order_delivered", "order_cancelled"];
+  if (!allowed.includes(event.event_type as NotificationEvent)) throw new Error("Unsupported notification event.");
+  return sendOrderNotification(admin, event.order_id, event.event_type as NotificationEvent, event.id);
 }
