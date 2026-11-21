@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendOrderNotification } from "@/lib/notifications/order-email";
 
 export const runtime = "nodejs";
 
@@ -139,6 +140,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "This promotion has just reached its usage limit. Please retry without the code." }, { status: 409 });
       }
     }
+
+    try { await sendOrderNotification(admin, savedOrder.id, "order_received"); } catch { /* Checkout must remain successful if email delivery is unavailable. */ }
 
     return NextResponse.json({
       orderId: savedOrder.id, orderNumber: savedOrder.order_number,
