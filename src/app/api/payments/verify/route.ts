@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendOrderNotification } from "@/lib/notifications/order-email";
 
 export const runtime = "nodejs";
 export async function POST(request: Request) {
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
     if (stockError || processed !== true) {
       return NextResponse.json({ error: "Payment received; order confirmation is being reconciled." }, { status: 500 });
     }
+    try { await sendOrderNotification(admin, order.id, "payment_confirmed"); } catch { /* Do not fail payment verification because of email delivery. */ }
     return NextResponse.json({ success: true, orderNumber: order.order_number, alreadyPaid: order.payment_status === "paid" });
   } catch {
     return NextResponse.json({ error: "Unable to verify this payment. Please contact the store." }, { status: 500 });
