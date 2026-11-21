@@ -52,7 +52,7 @@ export async function sendOrderNotification(admin: SupabaseClient, orderId: stri
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM_EMAIL;
   if (!apiKey || !from) {
-    await admin.from("store_notification_events").update({ delivery_status: "skipped", error_message: "Email provider is not configured. Set RESEND_API_KEY and RESEND_FROM_EMAIL." }).eq("id", event.id);
+    await admin.from("store_notification_events").update({ delivery_status: "skipped", error_message: "Email provider is not configured. Set RESEND_API_KEY and RESEND_FROM_EMAIL." }).eq("id", eventId);
     return { sent: false, skipped: true };
   }
 
@@ -84,7 +84,7 @@ export async function retryOrderNotification(admin: SupabaseClient, eventId: str
   const { data: event, error } = await admin.from("store_notification_events")
     .select("id,order_id,event_type,delivery_status").eq("id", eventId).maybeSingle();
   if (error || !event) throw new Error("Notification not found.");
-  if (event.delivery_status === "sent") throw new Error("This notification was already sent.");
+  if (event.delivery_status !== "failed" && event.delivery_status !== "skipped") throw new Error("Only failed or skipped notifications can be retried.");
   const allowed: NotificationEvent[] = ["order_received", "payment_confirmed", "order_confirmed", "order_processing", "order_shipped", "order_delivered", "order_cancelled"];
   if (!allowed.includes(event.event_type as NotificationEvent)) throw new Error("Unsupported notification event.");
   return sendOrderNotification(admin, event.order_id, event.event_type as NotificationEvent, event.id);
