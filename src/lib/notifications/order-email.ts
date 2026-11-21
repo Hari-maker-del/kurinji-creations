@@ -30,10 +30,13 @@ export async function sendOrderNotification(admin: SupabaseClient, orderId: stri
     if (existingError || !existing || existing.order_id !== order.id || existing.event_type !== eventType || existing.delivery_status === "sent") {
       throw new Error("This notification cannot be retried.");
     }
-    const { error: resetError } = await admin.from("store_notification_events").update({
+    // Claim the retry with a conditional status update so concurrent requests
+    // cannot both send the same event.
+    const { data: claimed, error: resetError } = await admin.from("store_notification_events").update({
       delivery_status: "pending", recipient_email: recipient || null, error_message: null
-    }).eq("id", retryEventId);
-    if (resetError) throw new Error("Could not prepare notification retry.");
+    }).eq("id", retryEventId).eq("delivery_status", existing.delivery_status).select("id").maybeSingle();
+    if (resetError || !claimed) throw new Error("This notification is already being retried or is no longer eligible.");
+    eventId = claimed.id;
   } else {
     const { data: event, error: insertError } = await admin.from("store_notification_events")
       .insert({ order_id: order.id, event_type: eventType, recipient_email: recipient || null, delivery_status: "pending" })
@@ -43,6 +46,7 @@ export async function sendOrderNotification(admin: SupabaseClient, orderId: stri
     if (insertError || !event) throw new Error("Could not record customer notification.");
     eventId = event.id;
   }
+  if (!eventId) throw new Error("Could not identify notification event.");
 
   if (!recipient) {
     await admin.from("store_notification_events").update({ delivery_status: "skipped", error_message: "Customer email address was not provided." }).eq("id", eventId);
@@ -71,11 +75,11 @@ export async function sendOrderNotification(admin: SupabaseClient, orderId: stri
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(String(result.message || result.name || "Email provider rejected the request."));
-    await admin.from("store_notification_events").update({ delivery_status: "sent", provider_message_id: result.id ?? null, sent_at: new Date().toISOString(), error_message: null }).eq("id", event.id);
+    await admin.from("store_notification_events").update({ delivery_status: "sent", provider_message_id: result.id ?? null, sent_at: new Date().toISOString(), error_message: null }).eq("id", eventId);
     return { sent: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Email delivery failed.";
-    await admin.from("store_notification_events").update({ delivery_status: "failed", error_message: message.slice(0, 500) }).eq("id", event.id);
+    await admin.from("store_notification_events").update({ delivery_status: "failed", error_message: message.slice(0, 500) }).eq("id", eventId);
     return { sent: false, failed: true };
   }
 }
