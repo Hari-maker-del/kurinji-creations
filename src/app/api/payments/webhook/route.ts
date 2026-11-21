@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendOrderNotification } from "@/lib/notifications/order-email";
 
 export const runtime = "nodejs";
 export async function POST(request: Request) {
@@ -58,6 +59,7 @@ export async function POST(request: Request) {
     if (stockError || processed !== true) {
       return NextResponse.json({ error: "Could not reconcile payment and inventory." }, { status: 500 });
     }
+    try { await sendOrderNotification(admin, storeOrder.id, "payment_confirmed"); } catch { /* Webhook retries must not be caused by email outages. */ }
     return NextResponse.json({ received: true });
   } catch {
     return NextResponse.json({ error: "Invalid webhook payload." }, { status: 400 });
