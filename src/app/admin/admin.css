@@ -235,3 +235,21 @@
 .admin-referral-code{font-size:10px!important;letter-spacing:.06em;color:#806044!important;margin-top:8px!important}
 .admin-referral-code b{font-size:12px;letter-spacing:.16em;color:#51483e}
 .admin-referral-code button{border:0;background:none;color:#a8794f;text-decoration:underline;font:inherit;cursor:pointer;margin-left:7px}
+
+/* Customer notification history */
+.admin-notification-list{display:grid}
+.admin-notification-row{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:17px 0;border-top:1px solid #eee8df}
+.admin-notification-row:first-child{border-top:0}
+.admin-notification-main{min-width:0;flex:1}
+.admin-notification-main strong,.admin-notification-main span,.admin-notification-main small{display:block}
+.admin-notification-main strong{font-size:12px;font-weight:600;color:#51483e}
+.admin-notification-main span{font-size:10px;text-transform:capitalize;color:#806044;margin-top:5px}
+.admin-notification-main small{font-size:9px;color:#93877a;margin-top:5px;overflow-wrap:anywhere}
+.admin-notification-main p{font-size:10px;color:#9b4e40;background:#f8e8e5;padding:9px 11px;margin:9px 0 0;line-height:1.5;overflow-wrap:anywhere}
+.admin-notification-actions{display:flex;align-items:flex-end;gap:9px;flex-direction:column;flex:0 0 auto}
+.admin-notification-status{display:inline-flex;align-items:center;padding:6px 9px;font-size:8px;text-transform:uppercase;letter-spacing:.08em}
+.admin-notification-status.sent{background:#e7efe7;color:#476b4c}
+.admin-notification-status.pending{background:#fff0d9;color:#8a6533}
+.admin-notification-status.failed{background:#f8e8e5;color:#8a3d35}
+.admin-notification-status.skipped{background:#f0ece6;color:#796b5d}
+@media(max-width:650px){.admin-notification-row{align-items:stretch;flex-direction:column}.admin-notification-actions{align-items:flex-start;flex-direction:row;flex-wrap:wrap}}
