@@ -5,6 +5,14 @@ export const runtime = "nodejs";
 
 export async function POST(request: Request) {
   try {
+    // This endpoint is used by guest checkout when the Razorpay modal is dismissed.
+    // Keep guest access, but reject cross-origin browser requests to reduce CSRF risk.
+    const origin = request.headers.get("origin");
+    const host = request.headers.get("host");
+    if (!origin || !host || new URL(origin).host !== host) {
+      return NextResponse.json({ error: "Invalid request origin." }, { status: 403 });
+    }
+
     const body = await request.json();
     const orderId = String(body.orderId ?? "");
     const razorpayOrderId = String(body.razorpayOrderId ?? "");
