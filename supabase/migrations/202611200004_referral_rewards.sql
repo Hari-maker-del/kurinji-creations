@@ -37,48 +37,76 @@ revoke all on function public.validate_store_referral_code(text,text) from publi
 grant execute on function public.validate_store_referral_code(text,text) to service_role;
 -- The paid-order function retains the existing idempotent stock and points processing, then
 -- awards 100 referrer points and 50 new-customer points only on the referred customer's first paid order.
+-- Keep loyalty earning and referral qualification independent: a first paid order can
+-- qualify a referral even when its net value earns zero whole points.
+-- The payment confirmation function is idempotent across browser verification and webhooks.
 create or replace function public.confirm_paid_order_and_decrement_stock(p_order_id uuid,p_payment_id text,p_signature text default null)
 returns boolean language plpgsql security definer set search_path=public as $$
 declare
- order_row public.store_orders%rowtype; item jsonb; pid uuid; qty integer; product_row public.products%rowtype;
+ o public.store_orders%rowtype; item jsonb; pid uuid; qty integer; product_row public.products%rowtype;
  account_row public.store_loyalty_accounts%rowtype; referrer_row public.store_loyalty_accounts%rowtype;
- earned integer; normalized_phone text; is_new_account boolean;
+ earned integer; normalized_phone text; is_new_account boolean; redemption_row public.store_loyalty_redemptions%rowtype;
 begin
- select * into order_row from public.store_orders where id=p_order_id for update;
+ select * into o from public.store_orders where id=p_order_id for update;
  if not found then raise exception 'Order not found'; end if;
+ if o.payment_status='paid' then return true; end if;
+
  if not exists(select 1 from public.store_stock_adjustments where order_id=p_order_id) then
-  for item in select value from jsonb_array_elements(order_row.items) loop
+  for item in select value from jsonb_array_elements(o.items) loop
    pid:=(item->>'product_id')::uuid; qty:=(item->>'quantity')::integer;
    if qty is null or qty<1 then raise exception 'Invalid order quantity'; end if;
-   update public.products set stock_quantity=stock_quantity-qty where id=pid and stock_quantity>=qty returning * into product_row;
+   update public.products set stock_quantity=stock_quantity-qty
+    where id=pid and stock_quantity>=qty returning * into product_row;
    if not found then raise exception 'Insufficient stock for product %',pid; end if;
    insert into public.store_inventory_logs(product_id,product_name,adjustment,previous_stock,new_stock,reason,changed_by,event_type,order_id)
-   values(pid,product_row.name,-qty,product_row.stock_quantity+qty,product_row.stock_quantity,'Paid order #'||order_row.order_number,null,'sale',p_order_id);
+   values(pid,product_row.name,-qty,product_row.stock_quantity+qty,product_row.stock_quantity,'Paid order #'||o.order_number,null,'sale',p_order_id);
   end loop;
   insert into public.store_stock_adjustments(order_id,payment_id) values(p_order_id,p_payment_id);
  end if;
- update public.store_orders set payment_status='paid',status='confirmed',razorpay_payment_id=coalesce(razorpay_payment_id,p_payment_id),razorpay_signature=coalesce(razorpay_signature,p_signature) where id=p_order_id;
+
+ update public.store_orders set payment_status='paid',status='confirmed',
+  razorpay_payment_id=coalesce(razorpay_payment_id,p_payment_id),
+  razorpay_signature=coalesce(razorpay_signature,p_signature),
+  loyalty_redemption_status=case when loyalty_points_redeemed>0 then 'consumed' else loyalty_redemption_status end
+ where id=p_order_id;
+ select * into redemption_row from public.store_loyalty_redemptions where order_id=p_order_id for update;
+ if found and redemption_row.status='reserved' then
+  update public.store_loyalty_redemptions set status='consumed',updated_at=now() where id=redemption_row.id;
+ end if;
+
  if not exists(select 1 from public.store_loyalty_ledger where order_id=p_order_id and event_type='order_reward') then
-  normalized_phone:=regexp_replace(coalesce(order_row.phone,''),'[^0-9]','','g');
-  earned:=greatest(0,floor((order_row.subtotal_paise-coalesce(order_row.discount_paise,0))::numeric/10000)::integer);
-  if length(normalized_phone)>=8 and earned>0 then
+  normalized_phone:=regexp_replace(coalesce(o.phone,''),'[^0-9]','','g');
+  earned:=greatest(0,floor((o.subtotal_paise-coalesce(o.discount_paise,0)-coalesce(o.loyalty_discount_paise,0))::numeric/10000)::integer);
+  if length(normalized_phone)>=8 then
    select exists(select 1 from public.store_loyalty_accounts where phone=normalized_phone) into is_new_account;
-   insert into public.store_loyalty_accounts(phone,customer_name,email) values(normalized_phone,order_row.customer_name,order_row.email)
-   on conflict(phone) do update set customer_name=excluded.customer_name,email=coalesce(excluded.email,store_loyalty_accounts.email),updated_at=now() returning * into account_row;
-   update public.store_loyalty_accounts set points_balance=points_balance+earned,lifetime_points=lifetime_points+earned,
-    tier=case when lifetime_points+earned>=3000 then 'platinum' when lifetime_points+earned>=1500 then 'gold' when lifetime_points+earned>=500 then 'silver' else 'bronze' end,updated_at=now() where id=account_row.id;
-   insert into public.store_loyalty_ledger(account_id,order_id,points,event_type,description) values(account_row.id,p_order_id,earned,'order_reward','Reward for paid order #'||order_row.order_number);
-   if is_new_account and order_row.referrer_account_id is not null and order_row.referrer_account_id<>account_row.id
+   insert into public.store_loyalty_accounts(phone,customer_name,email) values(normalized_phone,o.customer_name,o.email)
+   on conflict(phone) do update set customer_name=excluded.customer_name,email=coalesce(excluded.email,store_loyalty_accounts.email),updated_at=now()
+   returning * into account_row;
+
+   if earned>0 then
+    update public.store_loyalty_accounts set points_balance=points_balance+earned,lifetime_points=lifetime_points+earned,
+     tier=case when lifetime_points+earned>=3000 then 'platinum' when lifetime_points+earned>=1500 then 'gold' when lifetime_points+earned>=500 then 'silver' else 'bronze' end,
+     updated_at=now() where id=account_row.id;
+    insert into public.store_loyalty_ledger(account_id,order_id,points,event_type,description)
+     values(account_row.id,p_order_id,earned,'order_reward','Reward for paid order #'||o.order_number);
+   end if;
+
+   if is_new_account and o.referrer_account_id is not null and o.referrer_account_id<>account_row.id
       and not exists(select 1 from public.store_referrals where referred_account_id=account_row.id) then
-    select * into referrer_row from public.store_loyalty_accounts where id=order_row.referrer_account_id for update;
+    select * into referrer_row from public.store_loyalty_accounts where id=o.referrer_account_id for update;
     if found then
      update public.store_loyalty_accounts set points_balance=points_balance+50,lifetime_points=lifetime_points+50,
-      tier=case when lifetime_points+50>=3000 then 'platinum' when lifetime_points+50>=1500 then 'gold' when lifetime_points+50>=500 then 'silver' else 'bronze' end,updated_at=now() where id=account_row.id;
+      tier=case when lifetime_points+50>=3000 then 'platinum' when lifetime_points+50>=1500 then 'gold' when lifetime_points+50>=500 then 'silver' else 'bronze' end,
+      updated_at=now() where id=account_row.id;
      update public.store_loyalty_accounts set points_balance=points_balance+100,lifetime_points=lifetime_points+100,
-      tier=case when lifetime_points+100>=3000 then 'platinum' when lifetime_points+100>=1500 then 'gold' when lifetime_points+100>=500 then 'silver' else 'bronze' end,updated_at=now() where id=referrer_row.id;
-     insert into public.store_referrals(referrer_account_id,referred_account_id,qualifying_order_id,referral_code) values(referrer_row.id,account_row.id,p_order_id,order_row.referral_code);
-     insert into public.store_loyalty_ledger(account_id,order_id,points,event_type,description) values(account_row.id,p_order_id,50,'admin_adjustment','New customer referral bonus');
-     insert into public.store_loyalty_ledger(account_id,order_id,points,event_type,description) values(referrer_row.id,p_order_id,100,'admin_adjustment','Successful referral bonus');
+      tier=case when lifetime_points+100>=3000 then 'platinum' when lifetime_points+100>=1500 then 'gold' when lifetime_points+100>=500 then 'silver' else 'bronze' end,
+      updated_at=now() where id=referrer_row.id;
+     insert into public.store_referrals(referrer_account_id,referred_account_id,qualifying_order_id,referral_code)
+      values(referrer_row.id,account_row.id,p_order_id,o.referral_code);
+     insert into public.store_loyalty_ledger(account_id,order_id,points,event_type,description)
+      values(account_row.id,p_order_id,50,'admin_adjustment','New customer referral bonus');
+     insert into public.store_loyalty_ledger(account_id,order_id,points,event_type,description)
+      values(referrer_row.id,p_order_id,100,'admin_adjustment','Successful referral bonus');
     end if;
    end if;
   end if;
