@@ -353,3 +353,45 @@ button:disabled,.kc-button[aria-disabled="true"]{opacity:.55;cursor:not-allowed;
 .kc-rewards-shop-link span{font-size:15px}
 .kc-referral-history{margin-top:26px}
 @media(max-width:560px){.kc-tier-progress{padding:14px}.kc-tier-progress>div:first-child{align-items:flex-start;flex-direction:column;gap:6px}.kc-loyalty-facts strong{font-size:22px}.kc-referral-actions{width:100%}.kc-referral-actions button{flex:1}}
+
+
+/* Premium polish: consistent brand assets, responsive spacing and accessible interactions */
+.kc-header .kc-master-logo{width:112px;height:112px;flex:0 0 112px}
+.kc-header .kc-master-logo img{object-fit:contain}
+.kc-footer .kc-footer-master-logo{width:132px;height:142px}
+.kc-landing a,.marketplace a,.marketplace button{-webkit-tap-highlight-color:transparent}
+.kc-landing a:focus-visible,.marketplace a:focus-visible,.marketplace button:focus-visible,.marketplace input:focus-visible,.marketplace select:focus-visible{outline:2px solid #a77d58;outline-offset:3px}
+.kc-header nav a,.kc-footer a,.kc-text-link,.kc-button,.kc-header-cta{transition:color .2s ease,background-color .2s ease,border-color .2s ease}
+.kc-brand-hero-image>img,.kc-about-hero img{object-position:center 48%}
+.marketplace{background:#faf8f4}
+.market-header,.market-categories{background:#faf8f4}
+.market-results,.market-filter-panel{background:#fffefa}
+.market-product-image img{transition:transform .55s cubic-bezier(.2,.7,.2,1)}
+.market-product:hover .market-product-image img{transform:scale(1.045)}
+.market-product-name:hover{color:#a77d58}
+.market-add{transition:background-color .2s ease,color .2s ease,border-color .2s ease}
+.market-add:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:760px){
+ .kc-header .kc-master-logo{width:82px;height:82px;flex:0 0 82px}
+ .kc-footer .kc-footer-master-logo{width:112px;height:120px}
+ .kc-header-cta{padding:11px 12px}
+ .kc-brand-hero{padding-top:48px}
+ .kc-brand-hero-image{margin-right:0}
+ .kc-brand-hero-foot{position:static;margin-top:28px;display:flex;flex-wrap:wrap;gap:7px}
+ .kc-brand-hero-foot span{padding:0}
+ .kc-about-promise{grid-template-columns:1fr;gap:22px;padding:48px 24px}
+ .kc-about-hero img{height:300px}
+ .market-header .kc-shop-logo{width:112px}
+ .market-banner{border-radius:2px}
+ .market-product-image{background:#eee8df}
+ .market-add{min-height:42px}
+}
+@media(min-width:761px) and (max-width:1050px){
+ .kc-header{padding-inline:28px}
+ .kc-header nav{gap:16px}
+ .kc-header nav a{font-size:8px}
+ .kc-header .kc-master-logo{width:94px;height:104px;flex-basis:94px}
+}
+@media(prefers-reduced-motion:reduce){
+ .kc-landing a,.marketplace a,.marketplace button,.market-product-image img{transition:none!important}
+}
