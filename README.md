@@ -1,8 +1,23 @@
 # Kurinji Creations
 
-A mobile-first jewellery storefront built with Next.js, React, TypeScript and Tailwind CSS.
+A mobile-first jewellery storefront built with Next.js 15, React 19, TypeScript, Supabase and Vercel.
 
-## Run locally
+## Brand direction
+
+Preserve the approved Kurinji Creations identity: the silver lotus and infinity logo, editorial serif typography, warm ivory and sand surfaces, deep brown accents and restrained muted-gold details. The customer experience should feel personal, calm and premium rather than like a generic marketplace.
+
+## Application areas
+
+- **Home:** brand story, custom jewellery introduction, craftsmanship and store calls to action.
+- **Shop:** live active-product catalogue from Supabase, category/search/filter/sort controls, wishlist and shopping bag.
+- **Product details:** product information, images, stock state and customisation inputs where enabled.
+- **Checkout and orders:** checkout flow, payment initiation/verification and order confirmation routes.
+- **Customer account:** sign-in, order history and loyalty information.
+- **Admin:** product/catalogue and store operations for users registered in `public.store_admins`.
+
+## Local development
+
+Requirements: Node.js 22 or later.
 
 ```bash
 npm install
@@ -11,40 +26,30 @@ npm run dev
 
 Open http://localhost:3000.
 
-## Included in this starter
-- Responsive editorial-style storefront
-- Mobile bottom navigation and desktop navigation
-- Category browsing and client-side product search
-- Sample product cards and wishlist interactions
-- Shopping bag drawer with subtotal and remove actions
-- WhatsApp order handoff
-- Brand story, store promises and contact section
+## Environment and services
 
-## Before accepting real orders
-The products, prices, imagery and availability currently shown are sample content. Replace them with the actual business catalogue and verified product information. Configure the official WhatsApp Business number. Add accurate shipping, returns, privacy and terms policies. Connect a backend for inventory and order records, and implement payment verification server-side before enabling online checkout.
+The storefront uses Supabase for catalogue and account data. Configure the public Supabase URL and publishable key in the appropriate Vercel environments. Never expose a Supabase secret/service-role key through a `NEXT_PUBLIC_*` variable or browser code.
 
-## Vercel
-Import this repository into Vercel. Framework preset: Next.js. Build command: `npm run build`.
-
-
-## Supabase setup (dedicated store project)
-
-A dedicated Supabase project is now provisioned for this store in Singapore.
+The dedicated Supabase project is:
 
 - Project ref: `jubopzqecnbmjtfzngph`
-- API URL: `https://jubopzqecnbmjtfzngph.supabase.co`
-- Tables: `product_categories`, `products`, `product_images`
-- Storage bucket: `product-images`
-- Vercel production, preview and development environments have the public URL and publishable key configured.
+- URL: `https://jubopzqecnbmjtfzngph.supabase.co`
 
-The schema is already applied. To reproduce it in another dedicated project, run `supabase/setup/catalogue.sql` in the Supabase SQL Editor.
+Store-owner authorization is based on membership in `public.store_admins`; do not use editable user metadata as an authorization source.
 
-The storefront reads active products from Supabase and product detail pages look up products by slug. If no active products are available, the shop displays a collection-coming-soon message rather than fabricated sample products or stock.
+## Catalogue operations
 
-Store-owner access is managed through the `public.store_admins` table. Add the owner's Supabase Auth user UUID to `store_admins` after the account is created. The application admin dashboard and its server-side admin APIs check this table. Do not use editable `user_metadata` for authorization. The current app does not use `app_metadata.store_role` as its admin source of truth.
+The shop reads active products and their category and image records from Supabase. If there are no active products, the shop displays a collection-coming-soon state instead of inventing catalogue items. Add verified product names, prices, photos, descriptions and stock before promoting products.
 
-The schema creates categories, products, and product images with Row Level Security. Public visitors can read active catalogue items; catalogue write policies must authorize the store-owner accounts registered in `public.store_admins`.
+## Payments and notifications
 
-**Important:** The four products currently shown on the website are design placeholders, not verified inventory. Replace their names, prices, photos, materials, and stock quantities with the shop owner's actual catalogue before accepting orders. Do not put a Supabase secret/service-role key in any `NEXT_PUBLIC_*` variable or browser code.
+Payment and notification integrations depend on the production environment variables and provider configuration being present. Verify the live Razorpay flow, payment signature checks, order status transitions, stock deduction and email delivery with test transactions before relying on them for customer orders.
 
-Current checkout remains a WhatsApp enquiry handoff; this setup does not activate online payments or order processing.
+## Quality checks
+
+```bash
+npm run lint
+npm run build
+```
+
+Run both checks before merging or deploying changes. A successful Vercel build confirms compilation and deployment, not end-to-end payment, email, fulfilment or admin workflow correctness.
