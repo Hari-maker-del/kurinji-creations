@@ -133,3 +133,93 @@
  .market-banner>div small{font-size:7px;letter-spacing:1px}
  .market-banner>div a{font-size:7px;gap:5px}
 }
+
+
+/* Premium mobile-first discovery layout */
+.marketplace{background:#f7f3ec;color:#302820;padding-bottom:92px}
+.market-promo{background:#29251f;color:#e9dfd2;padding:9px 12px;font-size:9px;letter-spacing:.16em}
+.market-header{background:#f7f3ec;min-height:78px;justify-content:space-between;padding-top:8px;padding-bottom:8px}
+.market-header .kc-shop-logo{width:126px;height:72px;display:flex;align-items:center;justify-content:flex-start;overflow:hidden}
+.market-header .kc-shop-logo img{width:100%;height:100%;object-fit:contain;object-position:left center}
+.market-header-actions{display:flex;align-items:center;gap:9px}
+.market-header-actions .market-wishlist-header,.market-header-actions .market-bag{width:42px;height:42px;border:1px solid #e3d9cc;border-radius:50%;background:#fffefa;color:#5b4b3c;display:grid;place-items:center;position:relative;padding:0}
+.market-header-actions b{position:absolute;right:-3px;top:-3px;background:#a77d58;color:white;border-radius:50%;font-size:9px;min-width:16px;height:16px;display:grid;place-items:center}
+.market-search-row{display:flex;align-items:center;gap:10px;padding-top:5px;padding-bottom:12px}
+.market-search{height:49px;border:1px solid #e4dacf;background:#fffefa;border-radius:3px;padding:0 15px;box-shadow:0 3px 12px #30282008}
+.market-search input{font-size:12px}
+.market-voice-search{height:49px;width:46px;flex:0 0 46px;border:1px solid #e4dacf;background:#fffefa;color:#806044;display:grid;place-items:center}
+.market-categories{justify-content:flex-start;gap:25px;padding:12px max(18px,calc((100% - 1180px)/2));overflow-x:auto;scrollbar-width:none;border-top:1px solid #e9e1d7;border-bottom:1px solid #e9e1d7}
+.market-categories::-webkit-scrollbar{display:none}
+.market-categories button{font-size:10px;letter-spacing:.08em;padding:7px 0}
+.market-categories button.active{border-bottom:2px solid #a77d58;font-weight:600}
+.market-banner-shell{max-width:1180px;margin:22px auto 0;width:calc(100% - 36px)}
+.market-banner{width:100%;margin:0;height:300px;border-radius:3px;background:#29251f;grid-template-columns:1fr .9fr}
+.market-banner>div{padding:34px 8%}
+.market-banner h1{font:clamp(34px,4.2vw,52px)/1.05 Italiana,serif;margin:13px 0}
+.market-banner p{font-size:11px;line-height:1.8}
+.market-banner img{object-position:center;min-width:0}
+.market-banner-dots{display:flex;justify-content:center;gap:8px;padding:14px 0 0}
+.market-banner-dots button{width:19px;height:4px;border:0;border-radius:10px;background:#d8cfc3;padding:0}
+.market-banner-dots button.active{width:42px;background:#302820}
+.market-discovery{padding-top:30px;padding-bottom:18px}
+.market-discovery-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:16px}
+.market-discovery-heading small{font-size:8px;letter-spacing:1.8px;color:#a77d58}
+.market-discovery-heading h2{font:29px/1.1 Italiana,serif;font-weight:400;margin:7px 0 0;color:#302820}
+.market-discovery-heading>a{display:flex;align-items:center;gap:5px;text-decoration:none;color:#806044;font-size:8px;letter-spacing:1px;white-space:nowrap}
+.market-featured-row{display:flex;gap:13px;overflow-x:auto;padding:0 0 12px;scroll-snap-type:x mandatory;scrollbar-width:none}
+.market-featured-row::-webkit-scrollbar{display:none}
+.market-featured-card{flex:0 0 156px;background:#fffefa;border:1px solid #ece4da;scroll-snap-align:start}
+.market-featured-card>a{display:block;aspect-ratio:1/1;background:#eee8df;overflow:hidden}
+.market-featured-card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s}
+.market-featured-card:hover img{transform:scale(1.04)}
+.market-featured-card>div{padding:10px 11px 12px;display:grid;gap:5px}
+.market-featured-card small{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#9b8978}
+.market-featured-card>div>a{font:18px/1.1 Italiana,serif;color:#302820;text-decoration:none;min-height:38px}
+.market-featured-card strong{font-size:11px;color:#302820}
+.market-featured-empty{font-size:11px;color:#81766a;padding:15px 0}
+.market-breadcrumb{padding-top:18px}
+.market-store-layout{padding-bottom:30px}
+.market-results{background:#fffefa;border:1px solid #eee7de}
+.market-results-head h2{font:36px Italiana,serif;font-weight:400}
+.market-product-image{background:#eee8df}
+.market-product-details{padding:11px 2px}
+.market-product-name{font-size:22px}
+.market-mobile-bottom{height:68px;grid-template-columns:repeat(5,1fr);padding:6px 8px max(6px,env(safe-area-inset-bottom));background:rgba(255,254,250,.97);backdrop-filter:blur(18px);border-top:1px solid #e7ded3;box-shadow:0 -5px 22px #3028200a}
+.market-mobile-bottom button,.market-mobile-bottom a{gap:4px;color:#81766a;font-size:8px;letter-spacing:.02em}
+.market-mobile-bottom .active{color:#806044;font-weight:600}
+.market-mobile-bottom b{top:-3px;right:calc(50% - 19px);background:#a77d58}
+.market-whatsapp{bottom:82px;background:#806044}
+@media(max-width:560px){
+ .marketplace{padding-bottom:82px}
+ .market-promo{font-size:7px;letter-spacing:1px;padding:8px}
+ .market-header{min-height:66px;padding:7px 14px}
+ .market-header .kc-shop-logo{width:104px;height:58px}
+ .market-header-actions{gap:7px}
+ .market-header-actions .market-wishlist-header,.market-header-actions .market-bag{width:38px;height:38px}
+ .market-search-row{padding:0 14px 10px}
+ .market-search{height:46px}
+ .market-voice-search{height:46px;width:42px;flex-basis:42px}
+ .market-categories{gap:21px;padding:10px 15px}
+ .market-categories button{font-size:9px}
+ .market-banner-shell{width:calc(100% - 28px);margin-top:14px}
+ .market-banner{height:225px;grid-template-columns:1.1fr .9fr}
+ .market-banner>div{padding:18px 14px}
+ .market-banner h1{font-size:clamp(27px,7vw,35px);margin:9px 0}
+ .market-banner p{font-size:9px;line-height:1.55}
+ .market-banner small{font-size:7px;letter-spacing:1px}
+ .market-banner a{font-size:7px;letter-spacing:.5px;gap:5px}
+ .market-banner img{object-position:58% center}
+ .market-banner-dots{padding-top:11px}
+ .market-discovery{padding:25px 14px 13px}
+ .market-discovery-heading h2{font-size:25px}
+ .market-featured-card{flex-basis:142px}
+ .market-breadcrumb{padding:14px 14px 9px}
+ .market-results{padding:12px}
+ .market-results-head h2{font-size:28px}
+ .market-product-grid{gap:17px 10px}
+ .market-product-name{font-size:19px}
+ .market-add{font-size:8px;min-height:40px}
+ .market-whatsapp{bottom:80px;right:14px;width:43px;height:43px}
+ .market-mobile-bottom{height:64px}
+}
+@media(prefers-reduced-motion:reduce){.market-featured-card img{transition:none}}
