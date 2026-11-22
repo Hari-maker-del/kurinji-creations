@@ -5,7 +5,7 @@ export default function AboutPage() {
     <main className="kc-landing kc-about-page">
       <div className="kc-topline">THOUGHTFULLY CHOSEN <span>✦</span> BEAUTIFULLY YOURS <span>✦</span> MADE FOR YOUR MOMENTS</div>
       <header className="kc-header">
-        <Link href="/" className="kc-wordmark kc-logo-link" aria-label="Kurinji Creations home"><img src="/brand/kurinji-header-logo.svg" alt="Kurinji Creations" /></Link>
+        <Link href="/" className="kc-wordmark kc-logo-link" aria-label="Kurinji Creations home"><img src="/brand/IMG-20261119-WA0000.jpg.jpeg" alt="Kurinji Creations" /></Link>
         <nav aria-label="Main navigation">
           <Link href="/">HOME</Link><Link href="/about" aria-current="page">ABOUT US</Link><Link href="/shop">STORE</Link>
         </nav>
@@ -36,7 +36,7 @@ export default function AboutPage() {
         <Link href="/shop" className="kc-text-link">VISIT KURINJI STORE <span>↗</span></Link>
       </section>
       <footer className="kc-footer">
-        <Link href="/" className="kc-wordmark kc-logo-link" aria-label="Kurinji Creations home"><img src="/brand/kurinji-header-logo.svg" alt="Kurinji Creations" /></Link>
+        <Link href="/" className="kc-wordmark kc-logo-link" aria-label="Kurinji Creations home"><img src="/brand/IMG-20261119-WA0000.jpg.jpeg" alt="Kurinji Creations" /></Link>
         <p>Little details. Lasting charm.</p>
         <div><Link href="/">HOME</Link><Link href="/shop">VISIT STORE</Link><Link href="/about">ABOUT US</Link></div>
         <small>© {new Date().getFullYear()} KURINJI CREATIONS · MADE WITH LOVE</small>
