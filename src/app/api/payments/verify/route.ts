@@ -45,11 +45,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Payment is not captured yet. Please wait and refresh your order status." }, { status: 409 });
     }
 
+    // Coupon usage is counted only after Razorpay confirms a captured payment.
+    const { data: couponClaimed, error: couponError } = await admin.rpc("claim_promo_usage_for_order", { p_order_id: order.id });
+    if (couponError || couponClaimed !== true) {
+      return NextResponse.json({ error: "Payment was received, but this promotion could not be redeemed. Please contact the store before retrying." }, { status: 409 });
+    }
+
     // Atomic RPC validates stock, deducts it once, and marks the order paid/confirmed.
     const { data: processed, error: stockError } = await admin.rpc("confirm_paid_order_and_decrement_stock", {
       p_order_id: order.id, p_payment_id: paymentId, p_signature: signature
     });
     if (stockError || processed !== true) {
+      await admin.rpc("release_promo_usage_for_order", { p_order_id: order.id });
       return NextResponse.json({ error: "Payment received; order confirmation is being reconciled." }, { status: 500 });
     }
     try { await sendOrderNotification(admin, order.id, "payment_confirmed"); } catch { /* Do not fail payment verification because of email delivery. */ }
