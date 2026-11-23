@@ -25,6 +25,7 @@ export async function POST(request: Request) {
       p_razorpay_order_id: razorpayOrderId
     });
     if (error) return NextResponse.json({ error: "Unable to release reserved points." }, { status: 500 });
+    if (data !== true) return NextResponse.json({ success: false });
     const { error: promoError } = await admin.rpc("release_promo_usage_for_order", { p_order_id: orderId });
     if (promoError) return NextResponse.json({ error: "Unable to release checkout reservations." }, { status: 500 });
     return NextResponse.json({ success: data === true });
