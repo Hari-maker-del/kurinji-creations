@@ -55,7 +55,7 @@ export default function CheckoutPage(){
   if(value===0)setProducts(old=>old.filter(p=>p.id!==id));
  }
  async function pay(){
-  if(!name.trim()||phone.trim().length<8||address.trim().length<10||!/^\\d{6}$/.test(postalCode.trim())){setMessage("Enter your name, phone number, full address and a valid 6-digit PIN code.");return;}
+  if(!name.trim()||phone.trim().length<8||address.trim().length<10||!/^\d{6}$/.test(postalCode.trim())){setMessage("Enter your name, phone number, full address and a valid 6-digit PIN code.");return;}
   if(!products.length){setMessage("Your shopping bag is empty.");return;}
   const unavailable=products.find(p=>(quantities[p.id]||0)>p.stock||p.stock<=0);if(unavailable){setMessage(unavailable.name+" has only "+unavailable.stock+" available. Please update your bag.");return;}
   setBusy(true);setMessage("");
@@ -90,7 +90,7 @@ export default function CheckoutPage(){
     <label style={{fontSize:11}}>Phone / WhatsApp *<input required minLength={8} maxLength={20} value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+91 98765 43210"/></label>
     <label style={{fontSize:11}}>Email (optional)<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>
     <label style={{fontSize:11}}>Full delivery address *<textarea required minLength={10} maxLength={500} rows={3} value={address} onChange={e=>setAddress(e.target.value)} placeholder="House, street, area, city and state"/></label>
-    <label style={{fontSize:11}}>6-digit PIN code *<input required inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={postalCode} onChange={e=>setPostalCode(e.target.value.replace(/\\D/g,"").slice(0,6))} placeholder="e.g. 641001"/></label>
+    <label style={{fontSize:11}}>6-digit PIN code *<input required inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={postalCode} onChange={e=>setPostalCode(e.target.value.replace(/\D/g,"").slice(0,6))} placeholder="e.g. 641001"/></label>
     <label style={{fontSize:11}}>Order note (optional)<textarea rows={2} value={note} onChange={e=>setNote(e.target.value)} placeholder="Custom colour, charm or gift request"/></label>
     <button className="primary-button" disabled={busy} type="submit" style={{width:"100%"}}>{busy?"PLEASE WAIT…":"PAY "+money(payableTotal)+" SECURELY"} <ShieldCheck size={15}/></button>
     {message&&<p role="status" style={{fontSize:11,color:"#9b4e40",lineHeight:1.6}}>{message}</p>}
