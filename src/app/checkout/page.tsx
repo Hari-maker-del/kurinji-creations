@@ -14,7 +14,7 @@ export default function CheckoutPage(){
  const [products,setProducts]=useState<Product[]>([]);
  const [quantities,setQuantities]=useState<Record<string,number>>({});
  const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
- const [name,setName]=useState(""),[phone,setPhone]=useState(""),[email,setEmail]=useState(""),[address,setAddress]=useState(""),[note,setNote]=useState("");
+ const [name,setName]=useState(""),[phone,setPhone]=useState(""),[email,setEmail]=useState(""),[address,setAddress]=useState(""),[postalCode,setPostalCode]=useState(""),[note,setNote]=useState("");
  const [couponInput,setCouponInput]=useState(""),[couponCode,setCouponCode]=useState(""),[couponDiscount,setCouponDiscount]=useState(0),[couponMessage,setCouponMessage]=useState(""),[couponBusy,setCouponBusy]=useState(false);
  const [referralCode,setReferralCode]=useState("");
  const [redeemPoints,setRedeemPoints]=useState("0");
@@ -55,14 +55,14 @@ export default function CheckoutPage(){
   if(value===0)setProducts(old=>old.filter(p=>p.id!==id));
  }
  async function pay(){
-  if(!name.trim()||phone.trim().length<8||!address.trim()){setMessage("Enter your name, phone number and delivery address.");return;}
+  if(!name.trim()||phone.trim().length<8||address.trim().length<10||!/^\\d{6}$/.test(postalCode.trim())){setMessage("Enter your name, phone number, full address and a valid 6-digit PIN code.");return;}
   if(!products.length){setMessage("Your shopping bag is empty.");return;}
   const unavailable=products.find(p=>(quantities[p.id]||0)>p.stock||p.stock<=0);if(unavailable){setMessage(unavailable.name+" has only "+unavailable.stock+" available. Please update your bag.");return;}
   setBusy(true);setMessage("");
   let pendingOrder:any=null;
   try{
    const items=products.map(p=>({productId:p.id,quantity:quantities[p.id]||1}));
-   const response=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:name,phone,email,address,note,items,couponCode,referralCode,redeemPoints:requestedRedemption})});
+   const response=await fetch("/api/checkout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({customerName:name,phone,email,address,postalCode,note,items,couponCode,referralCode,redeemPoints:requestedRedemption})});
    const order=await response.json();if(!response.ok)throw new Error(order.error||"Unable to create order.");pendingOrder=order;
    if(!window.Razorpay){await new Promise<void>((resolve,reject)=>{const script=document.createElement("script");script.src="https://checkout.razorpay.com/v1/checkout.js";script.onload=()=>resolve();script.onerror=()=>reject(new Error("Payment window could not load."));document.body.appendChild(script);});}
    if(!window.Razorpay)throw new Error("Razorpay checkout is unavailable.");
@@ -89,7 +89,8 @@ export default function CheckoutPage(){
     <label style={{fontSize:11}}>Full name *<input required minLength={2} maxLength={100} value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/></label>
     <label style={{fontSize:11}}>Phone / WhatsApp *<input required minLength={8} maxLength={20} value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+91 98765 43210"/></label>
     <label style={{fontSize:11}}>Email (optional)<input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com"/></label>
-    <label style={{fontSize:11}}>Full delivery address *<textarea required rows={3} value={address} onChange={e=>setAddress(e.target.value)} placeholder="House, street, city, state and PIN code"/></label>
+    <label style={{fontSize:11}}>Full delivery address *<textarea required minLength={10} maxLength={500} rows={3} value={address} onChange={e=>setAddress(e.target.value)} placeholder="House, street, area, city and state"/></label>
+    <label style={{fontSize:11}}>6-digit PIN code *<input required inputMode="numeric" pattern="[0-9]{6}" maxLength={6} value={postalCode} onChange={e=>setPostalCode(e.target.value.replace(/\\D/g,"").slice(0,6))} placeholder="e.g. 641001"/></label>
     <label style={{fontSize:11}}>Order note (optional)<textarea rows={2} value={note} onChange={e=>setNote(e.target.value)} placeholder="Custom colour, charm or gift request"/></label>
     <button className="primary-button" disabled={busy} type="submit" style={{width:"100%"}}>{busy?"PLEASE WAIT…":"PAY "+money(payableTotal)+" SECURELY"} <ShieldCheck size={15}/></button>
     {message&&<p role="status" style={{fontSize:11,color:"#9b4e40",lineHeight:1.6}}>{message}</p>}
