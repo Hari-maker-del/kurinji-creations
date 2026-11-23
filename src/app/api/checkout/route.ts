@@ -19,12 +19,14 @@ export async function POST(request: Request) {
     const phone = String(body.phone ?? "").trim();
     const email = String(body.email ?? "").trim();
     const address = String(body.address ?? "").trim();
+    const postalCode = String(body.postalCode ?? "").trim();
     const note = String(body.note ?? "").trim();
     const couponCode = String(body.couponCode ?? "").trim().toUpperCase().replace(/\s+/g, "");
     const referralCode = String(body.referralCode ?? "").trim().toUpperCase().replace(/\s+/g, "");
     const items = body.items as CheckoutItem[];
 
     if (customerName.length < 2 || customerName.length > 100 || phone.length < 8 || phone.length > 20 ||
+        address.length < 10 || address.length > 500 || !/^\\d{6}$/.test(postalCode) ||
         !Array.isArray(items) || items.length < 1 || items.length > 10 ||
         items.some((item) => !item.productId || !Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > 10)) {
       return NextResponse.json({ error: "Please check your contact details and items." }, { status: 400 });
@@ -79,7 +81,7 @@ export async function POST(request: Request) {
     }
 
     const { data: savedOrder, error: saveError } = await admin.from("store_orders").insert({
-      customer_name: customerName, phone, email: email || null, address: address || null,
+      customer_name: customerName, phone, email: email || null, address: address + "\\nPIN: " + postalCode,
       customer_note: note || null, items: orderItems, subtotal_paise: subtotal,
       coupon_code: appliedCoupon, discount_paise: discountPaise,
       referral_code: referralCode || null, referrer_account_id: referrerAccountId,
