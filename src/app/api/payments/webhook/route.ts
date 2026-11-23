@@ -52,12 +52,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Payment amount mismatch." }, { status: 400 });
     }
 
-    // Count the promotion only after Razorpay reports a captured payment.
-    const { data: couponClaimed, error: couponError } = await admin.rpc("claim_promo_usage_for_order", { p_order_id: storeOrder.id });
-    if (couponError || couponClaimed !== true) {
-      return NextResponse.json({ error: "Captured payment could not redeem its promotion." }, { status: 409 });
-    }
-
     // Same atomic stock RPC as browser verification. Its adjustment ledger makes retries idempotent.
     const { data: processed, error: stockError } = await admin.rpc("confirm_paid_order_and_decrement_stock", {
       p_order_id: storeOrder.id, p_payment_id: paymentId, p_signature: null
