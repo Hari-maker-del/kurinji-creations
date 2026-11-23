@@ -31,7 +31,7 @@ export default function ProductPage(){
    setPhoto(0);setQty(1);setCatalogueLoading(false);
    supabase.from("products").select("id,slug,name,description,material,care_instructions,price_paise,stock_quantity,allows_customization,customization_notes,product_categories(name),product_images(image_url,sort_order,is_primary)").eq("is_active",true).neq("id",row.id).limit(8).then(({data:related})=>{if(!active||!related)return;setRelatedProducts((related as any[]).map(item=>{const cat=Array.isArray(item.product_categories)?item.product_categories[0]:item.product_categories;const imgs=Array.isArray(item.product_images)?[...item.product_images].sort((a,b)=>Number(a.sort_order)-Number(b.sort_order)):[];return{id:item.id,slug:item.slug,name:item.name,category:cat?.name??"Jewellery",price:Number(item.price_paise)/100,stock:Math.max(0,Number(item.stock_quantity)||0),images:imgs.map((image:any)=>image.image_url).filter(Boolean),description:item.description??"",material:item.material??"Details available on enquiry",care:item.care_instructions??"",allowsCustomization:!!item.allows_customization,customizationNotes:item.customization_notes??"",tag:""} as ProductDetail;}));});
    try{const saved=JSON.parse(localStorage.getItem("kurinji_recently_viewed_v1")||"[]");const ids=Array.isArray(saved)?saved.filter((id:any)=>typeof id==="string"&&id!==row.id):[];localStorage.setItem("kurinji_recently_viewed_v1",JSON.stringify([row.id,...ids].slice(0,12)));}catch{}
-  }).catch(()=>{if(active){setProduct(null);setCatalogueLoading(false);}});
+  },()=>{if(active){setProduct(null);setCatalogueLoading(false);}});
   return()=>{active=false;};
  },[params.slug]);
  async function uploadReference(file?:File){
