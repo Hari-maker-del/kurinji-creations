@@ -223,3 +223,15 @@
  .market-mobile-bottom{height:64px}
 }
 @media(prefers-reduced-motion:reduce){.market-featured-card img{transition:none}}
+
+
+.market-recent{padding-top:8px;padding-bottom:24px}
+.market-recent .market-discovery-heading{margin-bottom:12px}
+.market-recent .market-featured-card{background:#fffefa}
+.market-recent .market-featured-card>a{background:#eee8df}
+.market-recent .market-featured-row{scroll-padding-inline:14px}
+.detail-main-photo img{cursor:zoom-in}
+.detail-thumbs button{transition:border-color .2s ease,opacity .2s ease}
+.detail-thumbs button:focus-visible,.detail-zoom-trigger:focus-visible{outline:2px solid #a77d58;outline-offset:3px}
+.detail-lightbox img{max-height:82vh;max-width:min(92vw,1100px);object-fit:contain}
+@media(prefers-reduced-motion:reduce){.detail-thumbs button{transition:none}}
