@@ -8,31 +8,30 @@ import {ArrowLeft,ArrowRight,Heart,Minus,Plus,MessageCircle,ShieldCheck,PackageC
 type RazorpaySuccess={razorpay_order_id:string;razorpay_payment_id:string;razorpay_signature:string};
 declare global { interface Window { Razorpay?: new (options:any)=>{open:()=>void}; } }
 type ProductDetail={id:string;slug?:string;name:string;category:string;price:number;stock:number;tag?:string;images:string[];description:string;material:string;care:string;allowsCustomization:boolean;customizationNotes:string};
-const catalogue:ProductDetail[]=[
-{id:"1",slug:"golden-hour-hoops",name:"Golden Hour Hoops",category:"Earrings",price:399,stock:0,tag:"Bestseller",images:["https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1200&q=90","https://images.unsplash.com/photo-1617038220319-276d3cfab638?auto=format&fit=crop&w=1200&q=90"],description:"A warm golden accent for everyday moments. These hoops bring a little glow to your everyday edit and pair beautifully with both relaxed and dressed-up looks.",material:"Imitation jewellery · finish details to be confirmed",care:"Keep away from water, perfume and harsh chemicals. Store in a dry pouch.",allowsCustomization:false,customizationNotes:""},
-{id:"2",slug:"pearl-drop-elegance",name:"Pearl Drop Elegance",category:"Earrings",price:549,stock:0,tag:"New",images:["https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1200&q=90","https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1200&q=90"],description:"Soft pearl-inspired details with a graceful finish. A lovely choice for celebrations, gifting and adding a delicate touch to everyday outfits.",material:"Imitation jewellery · finish details to be confirmed",care:"Wipe gently with a soft dry cloth after use.",allowsCustomization:false,customizationNotes:""},
-{id:"3",slug:"everyday-charm-chain",name:"Everyday Charm Chain",category:"Necklaces",price:699,stock:0,tag:"",images:["https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=1200&q=90","https://images.unsplash.com/photo-1611652022419-a9419f74343d?auto=format&fit=crop&w=1200&q=90"],description:"A delicate layer made for every day. Wear it solo for a minimal look or pair it with your favourite pieces.",material:"Imitation jewellery · chain length to be confirmed",care:"Store separately to help prevent scratches and tangles.",allowsCustomization:false,customizationNotes:""},
-{id:"4",slug:"solstice-bracelet",name:"Solstice Bracelet",category:"Bracelets",price:449,stock:0,tag:"",images:["https://images.unsplash.com/photo-1611591437281-460bfbe1220a?auto=format&fit=crop&w=1200&q=90","https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?auto=format&fit=crop&w=1200&q=90"],description:"An understated finishing touch that slips easily into your everyday jewellery rotation.",material:"Imitation jewellery · sizing to be confirmed",care:"Avoid moisture and store in a dry jewellery pouch.",allowsCustomization:false,customizationNotes:""}
-];
 const money=(v:number)=>new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:0}).format(v);
 export default function ProductPage(){
  const router=useRouter();
- const params=useParams<{slug:string}>(),initialProduct=catalogue.find(p=>p.id===params.slug||p.slug===params.slug)??catalogue[0];
- const [product,setProduct]=useState<ProductDetail>(initialProduct);
+ const params=useParams<{slug:string}>();
+ const [product,setProduct]=useState<ProductDetail|null>(null);
+ const [catalogueLoading,setCatalogueLoading]=useState(true);
  const [photo,setPhoto]=useState(0),[qty,setQty]=useState(1),[saved,setSaved]=useState(false),[customColour,setCustomColour]=useState(""),[customRequest,setCustomRequest]=useState(""),[lightboxOpen,setLightboxOpen]=useState(false),[referenceUrl,setReferenceUrl]=useState(""),[referenceBusy,setReferenceBusy]=useState(false),[referenceMessage,setReferenceMessage]=useState("");
  const [customerName,setCustomerName]=useState(""),[customerPhone,setCustomerPhone]=useState(""),[customerEmail,setCustomerEmail]=useState(""),[customerAddress,setCustomerAddress]=useState(""),[customerNote,setCustomerNote]=useState("");
  const [submitting,setSubmitting]=useState(false),[orderMessage,setOrderMessage]=useState("");
  useEffect(()=>{
-  if(!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY) return;
+  let active=true;setCatalogueLoading(true);setProduct(null);
+  if(!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY){setCatalogueLoading(false);return;}
   const supabase=createClient();
   supabase.from("products").select("id,slug,name,description,material,care_instructions,price_paise,stock_quantity,allows_customization,customization_notes,product_categories(name),product_images(image_url,sort_order,is_primary)").eq("slug",params.slug).eq("is_active",true).maybeSingle().then(({data,error})=>{
-   if(error || !data) return;
+   if(!active)return;
+   if(error || !data){setProduct(null);setCatalogueLoading(false);return;}
    const row=data as any;
    const category=Array.isArray(row.product_categories)?row.product_categories[0]:row.product_categories;
    const images=Array.isArray(row.product_images)?[...row.product_images].sort((a,b)=>Number(a.sort_order)-Number(b.sort_order)): [];
    setProduct({id:row.id,slug:row.slug,name:row.name,category:category?.name??"Jewellery",price:Number(row.price_paise)/100,stock:Math.max(0,Number(row.stock_quantity)||0),images:images.map(i=>i.image_url),description:row.description??"",material:row.material??"Details available on enquiry",care:row.care_instructions??"Please contact us for care guidance.",allowsCustomization:!!row.allows_customization,customizationNotes:row.customization_notes??"",tag:""});
-   setPhoto(0);setQty(1);
-  });
+   setPhoto(0);setQty(1);setCatalogueLoading(false);
+   try{const saved=JSON.parse(localStorage.getItem("kurinji_recently_viewed_v1")||"[]");const ids=Array.isArray(saved)?saved.filter((id:any)=>typeof id==="string"&&id!==row.id):[];localStorage.setItem("kurinji_recently_viewed_v1",JSON.stringify([row.id,...ids].slice(0,12));}catch{}
+  }).catch(()=>{if(active){setProduct(null);setCatalogueLoading(false);}});
+  return()=>{active=false;};
  },[params.slug]);
  async function uploadReference(file?:File){
   if(!file)return;setReferenceBusy(true);setReferenceMessage("");
@@ -41,7 +40,7 @@ export default function ProductPage(){
   catch(error){setReferenceMessage(error instanceof Error?error.message:"Unable to upload image.");}
   finally{setReferenceBusy(false);}
  }
- const orderText=encodeURIComponent("Hello Kurinji Creations! I would like to enquire about "+product.name+" (Qty: "+qty+")."+(customColour?" Preferred colour: "+customColour+".":"")+(customRequest?" Custom request: "+customRequest+".":"")+" Please confirm availability, customisation and delivery details.");
+ const orderText=encodeURIComponent("Hello Kurinji Creations! I would like to enquire about "+(product?.name??"this jewellery piece")+" (Qty: "+qty+")."+(customColour?" Preferred colour: "+customColour+".":"")+(customRequest?" Custom request: "+customRequest+".":"")+" Please confirm availability, customisation and delivery details.");
 
  async function startRazorpayPayment(){
   if(!customerName.trim()||customerPhone.trim().length<8){setOrderMessage("Please enter your name and phone number first.");return;}
@@ -64,14 +63,16 @@ export default function ProductPage(){
    setSubmitting(false);checkout.open();
   }catch(error){setSubmitting(false);setOrderMessage(error instanceof Error?error.message:"Unable to start payment.");}
  }
- const related=useMemo(()=>catalogue.filter(p=>p.id!==product.id).slice(0,3),[product.id]);
+ if(catalogueLoading)return <main className="detail-page"><div className="container section"><p>Loading this piece…</p></div></main>;
+ if(!product)return <main className="detail-page"><div className="container section"><div className="market-empty"><h1>This piece is unavailable</h1><p>It may have been removed from the collection or is temporarily unavailable.</p><Link href="/shop" className="primary-button">RETURN TO THE STORE</Link></div></div></main>;
+ const related:ProductDetail[]=[];
  return <main className="detail-page">
   <div className="promo">A LITTLE SOMETHING LOVELY · KURINJI CREATIONS</div>
   <header className="container detail-header"><Link href="/shop" className="back-link"><ArrowLeft size={17}/> <span>BACK TO SHOP</span></Link><Link href="/shop" className="brand kc-detail-logo" aria-label="Kurinji Creations"><img src="/brand/IMG-20261119-WA0000.jpg.jpeg" alt="Kurinji Creations"/></Link><span className="detail-header-note">THE LITTLE DETAILS</span></header>
   <div className="container detail-layout">
    <section className="detail-gallery">
-    <button type="button" className="detail-main-photo detail-zoom-trigger" onClick={()=>setLightboxOpen(true)} aria-label="Enlarge product image"><img src={product.images[photo]||catalogue[0].images[0]} alt={product.name+" jewellery view"}/><span className="detail-photo-tag">{product.tag||"CURATED FOR YOU"}</span><span className="detail-zoom-hint"><ZoomIn size={15}/> VIEW DETAIL</span></button>
-    <div className="detail-thumbs">{(product.images.length?product.images:catalogue[0].images).map((src,i)=><button key={src+i} className={photo===i?"selected":""} onClick={()=>setPhoto(i)} aria-label={"View product image "+(i+1)}><img src={src} alt=""/></button>)}</div>
+    <button type="button" className="detail-main-photo detail-zoom-trigger" onClick={()=>setLightboxOpen(true)} aria-label="Enlarge product image"><img src={product.images[photo]||"/brand/IMG-20261119-WA0000.jpg.jpeg"} alt={product.name+" jewellery view"}/><span className="detail-photo-tag">{product.tag||"CURATED FOR YOU"}</span><span className="detail-zoom-hint"><ZoomIn size={15}/> VIEW DETAIL</span></button>
+    <div className="detail-thumbs">{product.images.map((src,i)=><button key={src+i} className={photo===i?"selected":""} onClick={()=>setPhoto(i)} aria-label={"View product image "+(i+1)}><img src={src} alt=""/></button>)}</div>
    </section>
    <section className="detail-info">
     <div className="kicker">{product.category} · KURINJI EDIT</div>
@@ -106,6 +107,6 @@ export default function ProductPage(){
   </div>
   <section className="container related-section"><div className="kicker">MORE TO LOVE</div><h2 className="section-title">You may also like</h2><div className="related-grid">{related.map(p=><Link href={"/products/"+(p.slug||p.id)} key={p.id} className="related-card"><img src={p.images[0]} alt={p.name}/><span>{p.name}</span><strong>{money(p.price)}</strong></Link>)}</div></section>
   <footer className="container footer detail-footer"><div style={{textAlign:"center"}}><div className="brand kc-detail-footer-logo"><img src="/brand/IMG-20261119-WA0000.jpg.jpeg" alt="Kurinji Creations"/></div><p className="detail-footer-note">ELEGANCE IN EVERY DETAIL</p><Link href="/shop" className="text-link">CONTINUE SHOPPING</Link></div></footer>
-  {lightboxOpen&&<div className="detail-lightbox" role="dialog" aria-modal="true" aria-label="Product image preview" onClick={()=>setLightboxOpen(false)}><button type="button" onClick={()=>setLightboxOpen(false)} aria-label="Close image preview"><X size={22}/></button><img src={product.images[photo]||catalogue[0].images[0]} alt={product.name+" enlarged view"} onClick={e=>e.stopPropagation()}/><span>{product.name} · IMAGE {photo+1} OF {(product.images.length||catalogue[0].images.length)}</span></div>}\n  <a href={"https://wa.me/?text="+encodeURIComponent("Hello Kurinji Creations! I have a question about your jewellery.")} target="_blank" rel="noreferrer" className="detail-whatsapp" aria-label="Chat on WhatsApp"><MessageCircle size={21}/></a>
+  {lightboxOpen&&<div className="detail-lightbox" role="dialog" aria-modal="true" aria-label="Product image preview" onClick={()=>setLightboxOpen(false)}><button type="button" onClick={()=>setLightboxOpen(false)} aria-label="Close image preview"><X size={22}/></button><img src={product.images[photo]||"/brand/IMG-20261119-WA0000.jpg.jpeg"} alt={product.name+" enlarged view"} onClick={e=>e.stopPropagation()}/><span>{product.name} · IMAGE {photo+1} OF {product.images.length}</span></div>}\n  <a href={"https://wa.me/?text="+encodeURIComponent("Hello Kurinji Creations! I have a question about your jewellery.")} target="_blank" rel="noreferrer" className="detail-whatsapp" aria-label="Chat on WhatsApp"><MessageCircle size={21}/></a>
  </main>;
 }
