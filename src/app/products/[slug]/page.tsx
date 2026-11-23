@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useMemo,useState} from "react";
+import {useEffect,useState} from "react";
 import {createClient} from "@/lib/supabase/client";
 import Link from "next/link";
 import {useParams,useRouter} from "next/navigation";
@@ -29,7 +29,7 @@ export default function ProductPage(){
    const images=Array.isArray(row.product_images)?[...row.product_images].sort((a,b)=>Number(a.sort_order)-Number(b.sort_order)): [];
    setProduct({id:row.id,slug:row.slug,name:row.name,category:category?.name??"Jewellery",price:Number(row.price_paise)/100,stock:Math.max(0,Number(row.stock_quantity)||0),images:images.map(i=>i.image_url),description:row.description??"",material:row.material??"Details available on enquiry",care:row.care_instructions??"Please contact us for care guidance.",allowsCustomization:!!row.allows_customization,customizationNotes:row.customization_notes??"",tag:""});
    setPhoto(0);setQty(1);setCatalogueLoading(false);
-   try{const saved=JSON.parse(localStorage.getItem("kurinji_recently_viewed_v1")||"[]");const ids=Array.isArray(saved)?saved.filter((id:any)=>typeof id==="string"&&id!==row.id):[];localStorage.setItem("kurinji_recently_viewed_v1",JSON.stringify([row.id,...ids].slice(0,12));}catch{}
+   try{const saved=JSON.parse(localStorage.getItem("kurinji_recently_viewed_v1")||"[]");const ids=Array.isArray(saved)?saved.filter((id:any)=>typeof id==="string"&&id!==row.id):[];localStorage.setItem("kurinji_recently_viewed_v1",JSON.stringify([row.id,...ids].slice(0,12)));}catch{}
   }).catch(()=>{if(active){setProduct(null);setCatalogueLoading(false);}});
   return()=>{active=false;};
  },[params.slug]);
