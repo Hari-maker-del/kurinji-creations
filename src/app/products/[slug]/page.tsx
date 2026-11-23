@@ -13,12 +13,12 @@ export default function ProductPage(){
  const router=useRouter();
  const params=useParams<{slug:string}>();
  const [product,setProduct]=useState<ProductDetail|null>(null);
- const [catalogueLoading,setCatalogueLoading]=useState(true);
+ const [catalogueLoading,setCatalogueLoading]=useState(true),[relatedProducts,setRelatedProducts]=useState<ProductDetail[]>([]);
  const [photo,setPhoto]=useState(0),[qty,setQty]=useState(1),[saved,setSaved]=useState(false),[customColour,setCustomColour]=useState(""),[customRequest,setCustomRequest]=useState(""),[lightboxOpen,setLightboxOpen]=useState(false),[referenceUrl,setReferenceUrl]=useState(""),[referenceBusy,setReferenceBusy]=useState(false),[referenceMessage,setReferenceMessage]=useState("");
  const [customerName,setCustomerName]=useState(""),[customerPhone,setCustomerPhone]=useState(""),[customerEmail,setCustomerEmail]=useState(""),[customerAddress,setCustomerAddress]=useState(""),[customerNote,setCustomerNote]=useState("");
  const [submitting,setSubmitting]=useState(false),[orderMessage,setOrderMessage]=useState("");
  useEffect(()=>{
-  let active=true;setCatalogueLoading(true);setProduct(null);
+  let active=true;setCatalogueLoading(true);setProduct(null);setRelatedProducts([]);
   if(!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY){setCatalogueLoading(false);return;}
   const supabase=createClient();
   supabase.from("products").select("id,slug,name,description,material,care_instructions,price_paise,stock_quantity,allows_customization,customization_notes,product_categories(name),product_images(image_url,sort_order,is_primary)").eq("slug",params.slug).eq("is_active",true).maybeSingle().then(({data,error})=>{
@@ -29,6 +29,7 @@ export default function ProductPage(){
    const images=Array.isArray(row.product_images)?[...row.product_images].sort((a,b)=>Number(a.sort_order)-Number(b.sort_order)): [];
    setProduct({id:row.id,slug:row.slug,name:row.name,category:category?.name??"Jewellery",price:Number(row.price_paise)/100,stock:Math.max(0,Number(row.stock_quantity)||0),images:images.map(i=>i.image_url),description:row.description??"",material:row.material??"Details available on enquiry",care:row.care_instructions??"Please contact us for care guidance.",allowsCustomization:!!row.allows_customization,customizationNotes:row.customization_notes??"",tag:""});
    setPhoto(0);setQty(1);setCatalogueLoading(false);
+   supabase.from("products").select("id,slug,name,description,material,care_instructions,price_paise,stock_quantity,allows_customization,customization_notes,product_categories(name),product_images(image_url,sort_order,is_primary)").eq("is_active",true).neq("id",row.id).limit(8).then(({data:related})=>{if(!active||!related)return;setRelatedProducts((related as any[]).map(item=>{const cat=Array.isArray(item.product_categories)?item.product_categories[0]:item.product_categories;const imgs=Array.isArray(item.product_images)?[...item.product_images].sort((a,b)=>Number(a.sort_order)-Number(b.sort_order)):[];return{id:item.id,slug:item.slug,name:item.name,category:cat?.name??"Jewellery",price:Number(item.price_paise)/100,stock:Math.max(0,Number(item.stock_quantity)||0),images:imgs.map((image:any)=>image.image_url).filter(Boolean),description:item.description??"",material:item.material??"Details available on enquiry",care:item.care_instructions??"",allowsCustomization:!!item.allows_customization,customizationNotes:item.customization_notes??"",tag:""} as ProductDetail;}));});
    try{const saved=JSON.parse(localStorage.getItem("kurinji_recently_viewed_v1")||"[]");const ids=Array.isArray(saved)?saved.filter((id:any)=>typeof id==="string"&&id!==row.id):[];localStorage.setItem("kurinji_recently_viewed_v1",JSON.stringify([row.id,...ids].slice(0,12)));}catch{}
   }).catch(()=>{if(active){setProduct(null);setCatalogueLoading(false);}});
   return()=>{active=false;};
@@ -65,7 +66,7 @@ export default function ProductPage(){
  }
  if(catalogueLoading)return <main className="detail-page"><div className="container section"><p>Loading this piece…</p></div></main>;
  if(!product)return <main className="detail-page"><div className="container section"><div className="market-empty"><h1>This piece is unavailable</h1><p>It may have been removed from the collection or is temporarily unavailable.</p><Link href="/shop" className="primary-button">RETURN TO THE STORE</Link></div></div></main>;
- const related:ProductDetail[]=[];
+ const related=relatedProducts.filter(p=>p.stock>0&&p.images.length>0).slice(0,3);
  return <main className="detail-page">
   <div className="promo">A LITTLE SOMETHING LOVELY · KURINJI CREATIONS</div>
   <header className="container detail-header"><Link href="/shop" className="back-link"><ArrowLeft size={17}/> <span>BACK TO SHOP</span></Link><Link href="/shop" className="brand kc-detail-logo" aria-label="Kurinji Creations"><img src="/brand/IMG-20261119-WA0000.jpg.jpeg" alt="Kurinji Creations"/></Link><span className="detail-header-note">THE LITTLE DETAILS</span></header>
