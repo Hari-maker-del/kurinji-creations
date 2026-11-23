@@ -132,15 +132,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Payment was created but the order could not be linked. Please contact the store." }, { status: 500 });
     }
 
-    if (appliedCoupon) {
-      const { data: usageReserved, error: usageError } = await admin.rpc("increment_promo_usage", { p_code: appliedCoupon });
-      if (usageError || !usageReserved) {
-        await admin.rpc("release_store_loyalty_redemption", { p_order_id: savedOrder.id, p_razorpay_order_id: razorpayOrder.id });
-        await admin.from("store_orders").delete().eq("id", savedOrder.id);
-        return NextResponse.json({ error: "This promotion has just reached its usage limit. Please retry without the code." }, { status: 409 });
-      }
-    }
-
     try { await sendOrderNotification(admin, savedOrder.id, "order_received"); } catch { /* Checkout must remain successful if email delivery is unavailable. */ }
 
     return NextResponse.json({
